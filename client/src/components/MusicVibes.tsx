@@ -300,25 +300,28 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
     return MOOD_POPUP[condition as keyof typeof MOOD_POPUP] || MOOD_POPUP['Clear'];
   };
   
-  // Open JioSaavn for a track
-  const openJioSaavn = (trackUrl: string) => {
+  // Open YouTube Music for a track - replacing JioSaavn with a more reliable alternative
+  const openMusicPlayer = (trackUrl: string) => {
     try {
-      // Direct approach - go to JioSaavn's main site and let it handle search
-      // This is more reliable than trying to access specific song URLs
+      // Extract song and artist information
       const songTitle = trackUrl.includes('/song/') 
         ? trackUrl.split('/song/')[1].split('/')[0].replace(/-/g, ' ')
         : trackUrl;
-        
-      // Create a search URL that will work
-      const searchUrl = `https://www.jiosaavn.com/search/${encodeURIComponent(songTitle)}`;
+      
+      // Get the artist name from the track object if possible
+      const artistName = selectedPlaylist?.tracks.find(t => t.spotifyUrl === trackUrl)?.artist || '';
+      
+      // Create a YouTube Music search query with both song and artist for better results
+      const searchQuery = artistName ? `${songTitle} ${artistName}` : songTitle;
+      const youtubeSearchUrl = `https://music.youtube.com/search?q=${encodeURIComponent(searchQuery)}`;
       
       // Open in a new tab
-      window.open(searchUrl, '_blank', 'noopener,noreferrer');
-      console.log('Opening JioSaavn search URL:', searchUrl);
+      window.open(youtubeSearchUrl, '_blank', 'noopener,noreferrer');
+      console.log('Opening YouTube Music search:', youtubeSearchUrl);
     } catch (error) {
-      console.error('Error opening JioSaavn link:', error);
-      // Fallback to JioSaavn main page
-      window.open('https://www.jiosaavn.com/', '_blank', 'noopener,noreferrer');
+      console.error('Error opening music link:', error);
+      // Fallback to YouTube Music main page
+      window.open('https://music.youtube.com/', '_blank', 'noopener,noreferrer');
     }
   };
   
@@ -381,7 +384,7 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
                   className="h-7 w-7" 
                   onClick={(e) => {
                     e.stopPropagation();
-                    openJioSaavn(track.spotifyUrl);
+                    openMusicPlayer(track.spotifyUrl);
                   }}
                 >
                   <ExternalLink className="h-3 w-3" />
@@ -403,12 +406,12 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
           </Button>
           
           <a 
-            href="https://www.jiosaavn.com/" 
+            href="https://music.youtube.com/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-xs text-muted-foreground hover:text-primary flex items-center"
           >
-            Powered by JioSaavn
+            Find on YouTube Music
             <ExternalLink className="h-3 w-3 ml-1" />
           </a>
         </div>
@@ -431,7 +434,7 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
                     variant="ghost" 
                     size="icon" 
                     className="h-7 w-7" 
-                    onClick={() => openJioSaavn(track.spotifyUrl)}
+                    onClick={() => openMusicPlayer(track.spotifyUrl)}
                   >
                     <Play className="h-3 w-3" />
                   </Button>
