@@ -7,6 +7,8 @@ interface WeatherPhoto {
   credit?: string;
   temperature?: number; // Temperature threshold in Celsius
   condition?: string;   // Weather condition
+  season?: 'winter' | 'spring' | 'summer' | 'fall'; // Season for gradient overlay
+  gradientOverlay?: string; // CSS gradient overlay value
 }
 
 // Photos for sunny conditions
@@ -223,41 +225,211 @@ export const seasonalPhotos: WeatherPhoto[] = [
   },
 ];
 
-// Get a weather photo based on current conditions
+// Define reliable fallback images for each season/condition to ensure we always have images
+export const FALLBACK_PHOTOS: Record<string, WeatherPhoto[]> = {
+  summer: [
+    {
+      url: "https://images.pexels.com/photos/46710/pexels-photo-46710.jpeg",
+      alt: "Summer beach with palm trees",
+      season: "summer",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 223, 100, 0.1), rgba(255, 168, 50, 0.2))"
+    },
+    {
+      url: "https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg",
+      alt: "Summer sunset over beach",
+      season: "summer",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 223, 100, 0.1), rgba(255, 168, 50, 0.2))"
+    },
+    {
+      url: "https://images.pexels.com/photos/33545/sunrise-phu-quoc-island-ocean.jpg",
+      alt: "Tropical summer beach",
+      season: "summer",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 223, 100, 0.1), rgba(255, 168, 50, 0.2))"
+    },
+    {
+      url: "https://images.pexels.com/photos/2880507/pexels-photo-2880507.jpeg",
+      alt: "Vibrant summer forest",
+      season: "summer",
+      gradientOverlay: "linear-gradient(to bottom, rgba(76, 187, 23, 0.1), rgba(255, 168, 50, 0.1))"
+    }
+  ],
+  winter: [
+    {
+      url: "https://images.pexels.com/photos/688660/pexels-photo-688660.jpeg",
+      alt: "Snowy winter landscape",
+      season: "winter",
+      gradientOverlay: "linear-gradient(to bottom, rgba(230, 240, 255, 0.2), rgba(116, 171, 255, 0.2))"
+    },
+    {
+      url: "https://images.pexels.com/photos/730256/pexels-photo-730256.jpeg",
+      alt: "Winter forest with snow",
+      season: "winter",
+      gradientOverlay: "linear-gradient(to bottom, rgba(230, 240, 255, 0.2), rgba(116, 171, 255, 0.2))"
+    },
+    {
+      url: "https://images.pexels.com/photos/773594/pexels-photo-773594.jpeg",
+      alt: "Winter mountain landscape",
+      season: "winter",
+      gradientOverlay: "linear-gradient(to bottom, rgba(230, 240, 255, 0.2), rgba(116, 171, 255, 0.2))"
+    }
+  ],
+  spring: [
+    {
+      url: "https://images.pexels.com/photos/1028725/pexels-photo-1028725.jpeg",
+      alt: "Spring cherry blossoms",
+      season: "spring",
+      gradientOverlay: "linear-gradient(to bottom, rgba(200, 255, 200, 0.15), rgba(140, 210, 110, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/36478/amazing-beautiful-beauty-blue.jpg",
+      alt: "Spring meadow with flowers",
+      season: "spring",
+      gradientOverlay: "linear-gradient(to bottom, rgba(200, 255, 200, 0.15), rgba(140, 210, 110, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/3511546/pexels-photo-3511546.jpeg",
+      alt: "Spring blossoms on tree",
+      season: "spring",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 220, 230, 0.15), rgba(180, 210, 140, 0.15))"
+    }
+  ],
+  fall: [
+    {
+      url: "https://images.pexels.com/photos/1252983/pexels-photo-1252983.jpeg",
+      alt: "Fall forest with colored leaves",
+      season: "fall",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 200, 120, 0.15), rgba(200, 120, 50, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/1172849/pexels-photo-1172849.jpeg",
+      alt: "Fall pathway with leaves",
+      season: "fall",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 200, 120, 0.15), rgba(200, 120, 50, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg",
+      alt: "Fall red leaves",
+      season: "fall",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 180, 100, 0.15), rgba(220, 110, 60, 0.15))"
+    }
+  ],
+  rainy: [
+    {
+      url: "https://images.pexels.com/photos/110874/pexels-photo-110874.jpeg",
+      alt: "Rain drops on window",
+      condition: "rain",
+      gradientOverlay: "linear-gradient(to bottom, rgba(100, 140, 180, 0.2), rgba(70, 90, 120, 0.2))"
+    },
+    {
+      url: "https://images.pexels.com/photos/1463530/pexels-photo-1463530.jpeg",
+      alt: "Person with umbrella in rain",
+      condition: "rain",
+      gradientOverlay: "linear-gradient(to bottom, rgba(100, 140, 180, 0.2), rgba(70, 90, 120, 0.2))"
+    }
+  ],
+  cloudy: [
+    {
+      url: "https://images.pexels.com/photos/158163/clouds-cloudporn-weather-lookup-158163.jpeg",
+      alt: "Cloudy sky",
+      condition: "cloudy",
+      gradientOverlay: "linear-gradient(to bottom, rgba(200, 200, 200, 0.15), rgba(150, 150, 150, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/531767/pexels-photo-531767.jpeg",
+      alt: "Cloudy mountain landscape",
+      condition: "cloudy",
+      gradientOverlay: "linear-gradient(to bottom, rgba(200, 200, 200, 0.15), rgba(150, 150, 150, 0.15))"
+    }
+  ],
+  sunny: [
+    {
+      url: "https://images.pexels.com/photos/281260/pexels-photo-281260.jpeg",
+      alt: "Sunny beach",
+      condition: "sunny",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 240, 150, 0.15), rgba(255, 200, 120, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/355312/pexels-photo-355312.jpeg",
+      alt: "Sunny sky with clouds",
+      condition: "sunny",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 240, 150, 0.15), rgba(255, 200, 120, 0.15))"
+    }
+  ],
+  default: [
+    {
+      url: "https://images.pexels.com/photos/1486994/pexels-photo-1486994.jpeg",
+      alt: "Scenic landscape with river and mountains",
+      gradientOverlay: "linear-gradient(to bottom, rgba(200, 220, 240, 0.15), rgba(180, 200, 220, 0.15))"
+    },
+    {
+      url: "https://images.pexels.com/photos/33545/sunrise-phu-quoc-island-ocean.jpg",
+      alt: "Ocean sunset scenic view",
+      gradientOverlay: "linear-gradient(to bottom, rgba(255, 223, 100, 0.15), rgba(255, 168, 50, 0.15))"
+    }
+  ]
+};
+
+// Get a weather photo based on current conditions and apply gradient overlay based on season
 export function getWeatherPhoto(condition: string, temperature: number): WeatherPhoto {
   let photoCollection: WeatherPhoto[] = [];
+  const conditionLower = condition.toLowerCase();
+  const month = new Date().getMonth(); // 0-11
+  
+  // Determine season based on month (Northern Hemisphere)
+  const season = 
+    month >= 11 || month <= 1 ? 'winter' :
+    month >= 2 && month <= 4 ? 'spring' :
+    month >= 5 && month <= 7 ? 'summer' : 'fall';
+  
+  // Get seasonal gradient overlay
+  const seasonalGradients = {
+    winter: "linear-gradient(to bottom, rgba(230, 240, 255, 0.2), rgba(116, 171, 255, 0.2))",
+    spring: "linear-gradient(to bottom, rgba(200, 255, 200, 0.15), rgba(140, 210, 110, 0.15))",
+    summer: "linear-gradient(to bottom, rgba(255, 223, 100, 0.1), rgba(255, 168, 50, 0.2))",
+    fall: "linear-gradient(to bottom, rgba(255, 200, 120, 0.15), rgba(200, 120, 50, 0.15))"
+  };
   
   // First try to match by specific condition
-  if (condition.includes('sun') || condition.includes('clear')) {
-    photoCollection = sunnyPhotos;
-  } else if (condition.includes('rain') || condition.includes('drizzle') || condition.includes('shower')) {
-    photoCollection = rainyPhotos;
-  } else if (condition.includes('cloud') || condition.includes('overcast')) {
-    photoCollection = cloudyPhotos;
-  } else if (condition.includes('snow') || condition.includes('sleet') || condition.includes('ice')) {
-    photoCollection = snowyPhotos;
-  } else if (condition.includes('fog') || condition.includes('mist') || condition.includes('haze')) {
-    photoCollection = foggyPhotos;
+  if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
+    photoCollection = [...sunnyPhotos, ...FALLBACK_PHOTOS.sunny];
+  } else if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('shower')) {
+    photoCollection = [...rainyPhotos, ...FALLBACK_PHOTOS.rainy];
+  } else if (conditionLower.includes('cloud') || conditionLower.includes('overcast')) {
+    photoCollection = [...cloudyPhotos, ...FALLBACK_PHOTOS.cloudy];
+  } else if (conditionLower.includes('snow') || conditionLower.includes('sleet') || conditionLower.includes('ice')) {
+    photoCollection = [...snowyPhotos, ...FALLBACK_PHOTOS.winter.filter(p => p.url.includes('snow'))];
+  } else if (conditionLower.includes('fog') || conditionLower.includes('mist') || conditionLower.includes('haze')) {
+    photoCollection = [...foggyPhotos];
   } else {
-    // If no condition match, use temperature to determine season
+    // If no condition match, use temperature and time of year to determine season
     if (temperature >= 28) {
-      photoCollection = seasonalPhotos.filter(photo => photo.temperature && photo.temperature >= 25);
+      photoCollection = [...FALLBACK_PHOTOS.summer, ...seasonalPhotos.filter(photo => photo.temperature && photo.temperature >= 25)];
     } else if (temperature <= 5) {
-      photoCollection = seasonalPhotos.filter(photo => photo.temperature && photo.temperature <= 5);
+      photoCollection = [...FALLBACK_PHOTOS.winter, ...seasonalPhotos.filter(photo => photo.temperature && photo.temperature <= 5)];
+    } else if (temperature > 5 && temperature < 15) {
+      const isSpring = month >= 2 && month <= 4;
+      photoCollection = isSpring 
+        ? [...FALLBACK_PHOTOS.spring] 
+        : [...FALLBACK_PHOTOS.fall];
     } else {
-      photoCollection = seasonalPhotos.filter(photo => 
-        photo.temperature && photo.temperature > 5 && photo.temperature < 25
-      );
-    }
-    
-    // If still no matches, use a mix of all photos
-    if (photoCollection.length === 0) {
-      photoCollection = [...sunnyPhotos, ...cloudyPhotos, ...rainyPhotos, ...snowyPhotos, ...foggyPhotos];
+      photoCollection = [...FALLBACK_PHOTOS[season]];
     }
   }
   
-  // Get a random photo from the collection
-  const randomIndex = Math.floor(Math.random() * photoCollection.length);
+  // If still no matches, use default photos
+  if (photoCollection.length === 0) {
+    photoCollection = [...FALLBACK_PHOTOS.default];
+  }
+  
+  // Apply season tag and gradient overlay if not already present
+  photoCollection = photoCollection.map(photo => ({
+    ...photo,
+    season: photo.season || season,
+    gradientOverlay: photo.gradientOverlay || seasonalGradients[season as keyof typeof seasonalGradients]
+  }));
+  
+  // Get a random photo from the collection (using a more reliable randomization)
+  const randomIndex = Math.floor(Math.random() * Math.min(photoCollection.length, 10));
   return photoCollection[randomIndex];
 }
 

@@ -131,13 +131,30 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
         </div>
         
         <div className="relative">
-          {/* Weather Background Image */}
+          {/* Weather Background Image with Seasonal Gradient Overlay */}
           <div className="relative rounded-lg overflow-hidden h-64 md:h-80">
             <img 
               src={backgroundImage} 
               alt={`${location.name || 'Location'} ${weatherCondition} Weather`} 
               className="w-full h-full object-cover"
             />
+            {/* Seasonal gradient overlay */}
+            {weatherPhoto.gradientOverlay && (
+              <div 
+                className="absolute inset-0 pointer-events-none" 
+                style={{ 
+                  background: weatherPhoto.gradientOverlay,
+                  mixBlendMode: 'overlay'
+                }}
+                aria-hidden="true"
+              />
+            )}
+            {/* Season indicator */}
+            {weatherPhoto.season && (
+              <div className="absolute top-3 right-3 bg-black/30 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                {weatherPhoto.season.charAt(0).toUpperCase() + weatherPhoto.season.slice(1)}
+              </div>
+            )}
             
             {/* Photo Credit */}
             {weatherPhoto.credit && (

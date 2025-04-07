@@ -248,27 +248,93 @@ export default function Analytics() {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-  // Loading state
+  // Loading state with skeleton UI
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-secondary-light">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🌤️</div>
-          <p className="text-navy font-medium">Loading weather data...</p>
-        </div>
+      <div className="flex flex-col md:flex-row min-h-screen bg-secondary-light">
+        {/* Sidebar Navigation */}
+        <Sidebar />
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          <div className="w-full rounded-xl bg-white shadow-soft p-6 mb-6">
+            <div className="h-8 w-48 bg-gray-200 rounded-lg animate-pulse mb-4"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded-lg animate-pulse"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="col-span-2 rounded-xl bg-white shadow-soft p-6 h-[400px] animate-pulse">
+              <div className="h-8 w-36 bg-gray-200 rounded-lg mb-4"></div>
+              <div className="h-[320px] bg-gray-200 rounded-lg"></div>
+            </div>
+            <div className="rounded-xl bg-white shadow-soft p-6 animate-pulse">
+              <div className="h-8 w-36 bg-gray-200 rounded-lg mb-4"></div>
+              <div className="space-y-4">
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+                <div className="h-36 bg-gray-200 rounded-lg"></div>
+                <div className="h-20 bg-gray-200 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 text-center">
+            <div className="inline-flex items-center justify-center space-x-2">
+              <div className="animate-spin h-6 w-6 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+              <p className="text-navy font-medium">Loading real-time weather analytics...</p>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
-  // Error state
+  // Error state with retry button
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-secondary-light">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⚠️</div>
-          <p className="text-navy font-medium">Failed to load weather data</p>
-          <p className="text-gray-600 mt-2">Please try again later</p>
-        </div>
+      <div className="flex flex-col md:flex-row min-h-screen bg-secondary-light">
+        {/* Sidebar Navigation */}
+        <Sidebar />
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+          <div className="w-full rounded-xl bg-white shadow-soft p-8 flex flex-col items-center justify-center text-center h-[70vh]">
+            <div className="text-red-500 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-navy mb-2">Unable to Load Analytics Data</h2>
+            <p className="text-gray-600 mb-6 max-w-md">
+              We're having trouble fetching the latest weather analytics. This could be due to connectivity issues or 
+              API limitations.
+            </p>
+            <div className="space-y-3">
+              <button 
+                onClick={() => refetch()} 
+                className="px-4 py-2 bg-primary text-white rounded-lg flex items-center justify-center w-full md:w-auto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Retry Now
+              </button>
+              <button
+                onClick={() => setSearchLocation("New York")} 
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg w-full md:w-auto"
+              >
+                Try Another Location
+              </button>
+            </div>
+            {error instanceof Error && (
+              <div className="mt-6 p-4 bg-red-50 rounded-lg text-left max-w-lg">
+                <p className="text-sm font-medium text-red-800">Error Details:</p>
+                <p className="text-xs text-red-700 mt-1 font-mono">
+                  {error.message}
+                </p>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
     );
   }
