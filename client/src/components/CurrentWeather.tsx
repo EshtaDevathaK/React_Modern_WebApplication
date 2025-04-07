@@ -9,11 +9,54 @@ interface CurrentWeatherProps {
 }
 
 const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
+  // Handle API data structure variations and check for valid data
+  if (!weather || !weather.current || !weather.location) {
+    console.error("CurrentWeather: Invalid weather data structure:", weather);
+    return (
+      <div className="bg-white rounded-xl p-6 shadow-lg text-center">
+        <p className="text-lg font-semibold text-red-500">Weather data unavailable</p>
+        <p className="text-gray-600 mt-2">Please try refreshing or search for another location</p>
+      </div>
+    );
+  }
+  
   const currentWeather = weather.current;
   const location = weather.location;
-  const weatherCondition = currentWeather.condition.text;
-  const temperature = Math.round(currentWeather.temp_c);
-  const formattedDate = formatDate(location.localtime);
+  
+  // Extract weather condition text with fallbacks for different API structures
+  let weatherCondition = "Unknown";
+  if (currentWeather.condition && currentWeather.condition.text) {
+    weatherCondition = currentWeather.condition.text;
+  } else if (currentWeather.weather && currentWeather.weather[0] && currentWeather.weather[0].main) {
+    weatherCondition = currentWeather.weather[0].main;
+  } else if (currentWeather.weather && currentWeather.weather[0] && currentWeather.weather[0].description) {
+    weatherCondition = currentWeather.weather[0].description;
+  }
+  
+  // Extract temperature with fallbacks for different API structures
+  let temperature = 0;
+  if (currentWeather.temp_c !== undefined) {
+    temperature = Math.round(currentWeather.temp_c);
+  } else if (currentWeather.temp !== undefined) {
+    temperature = Math.round(currentWeather.temp);
+  } else if (currentWeather.main && currentWeather.main.temp !== undefined) {
+    temperature = Math.round(currentWeather.main.temp);
+  }
+  // Handle date with fallbacks
+  let localTimeString = location.localtime;
+  
+  // If localtime is not available, try to get it from other properties
+  if (!localTimeString) {
+    if (location.dt) {
+      // Convert UNIX timestamp to ISO string if available
+      localTimeString = new Date(location.dt * 1000).toISOString();
+    } else {
+      // Use current date as last resort
+      localTimeString = new Date().toISOString();
+    }
+  }
+  
+  const formattedDate = formatDate(localTimeString);
   
   // Generate mood suggestion based on weather condition
   const getMoodSuggestion = () => {
@@ -79,7 +122,7 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
           <div>
             <h6 className="text-sm text-gray-500 mb-1">Current Location</h6>
             <h3 className="text-xl font-semibold text-navy flex items-center">
-              {location.name}, {location.region}, {location.country}
+              {location.name || "Unknown"}{location.region ? `, ${location.region}` : ""}{location.country ? `, ${location.country}` : ""}
               <button className="ml-2 text-gray-400 hover:text-primary-dark">
                 <MapPin className="h-4 w-4" />
               </button>
@@ -92,7 +135,7 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
           <div className="relative rounded-lg overflow-hidden h-64 md:h-80">
             <img 
               src={backgroundImage} 
-              alt={`${location.name} ${weatherCondition} Weather`} 
+              alt={`${location.name || 'Location'} ${weatherCondition} Weather`} 
               className="w-full h-full object-cover"
             />
             

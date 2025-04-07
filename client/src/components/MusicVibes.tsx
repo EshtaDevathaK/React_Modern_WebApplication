@@ -15,7 +15,127 @@ export interface PlaylistTrack {
   spotifyUrl: string;
 }
 
-// Define playlists based on weather conditions
+// Define Tamil playlists based on weather conditions
+const TAMIL_WEATHER_PLAYLISTS: Record<string, {
+  title: string;
+  mood: string;
+  spotifyId: string;
+  description: string;
+  tracks: PlaylistTrack[];
+}> = {
+  'sunny': {
+    title: 'Tamil Sunny Day Vibes',
+    mood: 'Upbeat & Energetic',
+    spotifyId: '37i9dQZF1DX3vqmcY7rbTP',
+    description: 'Cheerful Tamil tracks perfect for a bright sunny day.',
+    tracks: [
+      { title: 'Mallipoo', artist: 'A.R. Rahman, Shweta Mohan', duration: '4:25', spotifyUrl: 'https://open.spotify.com/track/2vf4clQtiqtVdR6bbvofaH' },
+      { title: 'Maruvaarthai', artist: 'Sid Sriram', duration: '4:47', spotifyUrl: 'https://open.spotify.com/track/7x7RIq556HqP2JBvJlKPQN' },
+      { title: 'Kannaana Kanne', artist: 'D. Imman, Sid Sriram', duration: '5:35', spotifyUrl: 'https://open.spotify.com/track/5gOKNHRw7nQeNmXAQiXPm3' }
+    ]
+  },
+  'rain': {
+    title: 'Tamil Rainy Day Melodies',
+    mood: 'Mellow & Romantic',
+    spotifyId: '37i9dQZF1DWYpC2SRwVMtZ',
+    description: 'Soothing Tamil songs that pair perfectly with raindrops.',
+    tracks: [
+      { title: 'Mazhai Kuruvi', artist: 'A.R. Rahman, Shreya Ghoshal', duration: '5:42', spotifyUrl: 'https://open.spotify.com/track/2Q509oBkEBDe7QC1xGNGyx' },
+      { title: 'Nenjukkul Peidhidum', artist: 'Harris Jayaraj, Hariharan', duration: '5:02', spotifyUrl: 'https://open.spotify.com/track/5V1fkHxLzriKFYmeEJYzYI' },
+      { title: 'Megamo Aval', artist: 'Govind Vasantha, Chinmayi', duration: '3:57', spotifyUrl: 'https://open.spotify.com/track/31BTsTxZYn5nv2OXG4YMDq' }
+    ]
+  },
+  'cloudy': {
+    title: 'Tamil Cloudy Day Melodies',
+    mood: 'Thoughtful & Calm',
+    spotifyId: '37i9dQZF1DX4nA6pD5Wm1p',
+    description: 'Soothing Tamil tracks for overcast, thoughtful days.',
+    tracks: [
+      { title: 'Uyire', artist: 'A.R. Rahman, Hariharan', duration: '5:15', spotifyUrl: 'https://open.spotify.com/track/57kvK0hq6Xzpwt2VqN6yPD' },
+      { title: 'Unna Nenachu', artist: 'Govind Vasantha, Sid Sriram', duration: '3:48', spotifyUrl: 'https://open.spotify.com/track/6TuTFa8v32LzhP5h4Qr1NJ' },
+      { title: 'Kaadhal En Kaviye', artist: 'Sid Sriram', duration: '4:05', spotifyUrl: 'https://open.spotify.com/track/242dRxtP0hUhyhGQMX0IYH' }
+    ]
+  },
+  'clear': {
+    title: 'Tamil Clear Skies Music',
+    mood: 'Fresh & Uplifting',
+    spotifyId: '37i9dQZF1DXa2PjuCvZ7it',
+    description: 'Uplifting Tamil tracks for days with crystal clear skies.',
+    tracks: [
+      { title: 'Rowdy Baby', artist: 'Dhanush, Dhee', duration: '3:42', spotifyUrl: 'https://open.spotify.com/track/0NAkxNc5C9dosJ9xbQDV7m' },
+      { title: 'Vaathi Coming', artist: 'Anirudh Ravichander', duration: '3:55', spotifyUrl: 'https://open.spotify.com/track/6XUJkoPVKjsKm37UvdhaRu' },
+      { title: 'Aalaporan Thamizhan', artist: 'A.R. Rahman', duration: '5:01', spotifyUrl: 'https://open.spotify.com/track/7aFk8z1XCcKj29pLQ1GbLh' }
+    ]
+  },
+  'thunderstorm': {
+    title: 'Tamil Storm Intensity',
+    mood: 'Dramatic & Powerful',
+    spotifyId: '37i9dQZF1DX7T5WTGg8L5C',
+    description: 'Powerful Tamil tracks that match the intensity of a storm.',
+    tracks: [
+      { title: 'Danga Danga', artist: 'Vijay, Anirudh Ravichander', duration: '3:32', spotifyUrl: 'https://open.spotify.com/track/2BJu0AaWjFCvzh5M06tQ3g' },
+      { title: 'Aaruyire', artist: 'Harris Jayaraj', duration: '5:46', spotifyUrl: 'https://open.spotify.com/track/0l0eFecK9aCG0XGTTi2TzY' },
+      { title: 'Adiye', artist: 'G.V. Prakash Kumar', duration: '4:19', spotifyUrl: 'https://open.spotify.com/track/4Xjm77OyCwEYmXDqS0Ivpa' }
+    ]
+  },
+  'fog': {
+    title: 'Tamil Misty Morning Tunes',
+    mood: 'Mysterious & Ethereal',
+    spotifyId: '37i9dQZF1DX5TLaQDnVaiH',
+    description: 'Atmospheric Tamil music for foggy, misty days.',
+    tracks: [
+      { title: 'Nenjame', artist: 'Yuvan Shankar Raja', duration: '5:22', spotifyUrl: 'https://open.spotify.com/track/1aMz9zml3JdHssXQ3IZEBg' },
+      { title: 'Aagaya Vennilavae', artist: 'Karthik', duration: '5:34', spotifyUrl: 'https://open.spotify.com/track/61ixqD6uXt6kyIHLqWWN4T' },
+      { title: 'Thalli Pogathey', artist: 'A.R. Rahman, Sid Sriram', duration: '5:13', spotifyUrl: 'https://open.spotify.com/track/5JmYsY9BnHizMbUwYjTD7j' }
+    ]
+  },
+  'hot': {
+    title: 'Tamil Summer Heat Playlist',
+    mood: 'Energetic & Vibrant',
+    spotifyId: '37i9dQZF1DX6VdMW310pXC',
+    description: 'High-energy Tamil tracks for hot summer days.',
+    tracks: [
+      { title: 'Udhungada Sangu', artist: 'Anirudh Ravichander', duration: '3:26', spotifyUrl: 'https://open.spotify.com/track/0PD5GpeBzLbIaHKBDjdmG2' },
+      { title: 'Ethir Neechal', artist: 'Anirudh Ravichander, Hiphop Tamizha', duration: '3:42', spotifyUrl: 'https://open.spotify.com/track/4zJYn4EHggKiKB9eoEgVnE' },
+      { title: 'Arabic Kuthu', artist: 'Anirudh Ravichander', duration: '4:14', spotifyUrl: 'https://open.spotify.com/track/0XWpKIGLJGQUUHQzDPG9Mo' }
+    ]
+  },
+  'cold': {
+    title: 'Tamil Cold Day Warmth',
+    mood: 'Comforting & Warm',
+    spotifyId: '37i9dQZF1DX7vqqgeLlrLh',
+    description: 'Soothing Tamil melodies to warm you on a cold day.',
+    tracks: [
+      { title: 'Malargal Kaettaen', artist: 'A.R. Rahman', duration: '5:11', spotifyUrl: 'https://open.spotify.com/track/44NbcLQysno0oKdwb910pi' },
+      { title: 'Un Paarvaiyil', artist: 'Yuvan Shankar Raja', duration: '5:43', spotifyUrl: 'https://open.spotify.com/track/3FRpYxm54Pz9xHPCyKiSzh' },
+      { title: 'Achcham Enbadhu Madamaiyada', artist: 'A.R. Rahman', duration: '4:23', spotifyUrl: 'https://open.spotify.com/track/0m9CsQIlJyNfKyQaUfHOTK' }
+    ]
+  },
+  'windy': {
+    title: 'Tamil Windswept Melodies',
+    mood: 'Free & Flowing',
+    spotifyId: '37i9dQZF1DX2taNm2KsnLZ',
+    description: 'Tamil songs that capture the feeling of the wind.',
+    tracks: [
+      { title: 'Venmegam', artist: 'Harris Jayaraj', duration: '5:32', spotifyUrl: 'https://open.spotify.com/track/1iKJaLDkTi93syTGUGRtpt' },
+      { title: 'Uyirin Uyire', artist: 'A.R. Rahman, Hariharan', duration: '5:55', spotifyUrl: 'https://open.spotify.com/track/76BKzMlqkf1PROVxaZiCnO' },
+      { title: 'Vaseegara', artist: 'Harris Jayaraj', duration: '6:23', spotifyUrl: 'https://open.spotify.com/track/5YO5LUrRUMZkLz0P73sfxV' }
+    ]
+  },
+  'default': {
+    title: 'Tamil Weather Mood Mix',
+    mood: 'Balanced & Pleasant',
+    spotifyId: '37i9dQZF1DX6XE7HRLM75P',
+    description: 'A well-balanced mix of Tamil songs for any weather.',
+    tracks: [
+      { title: 'Munbe Vaa', artist: 'A.R. Rahman, Shreya Ghoshal', duration: '5:07', spotifyUrl: 'https://open.spotify.com/track/0OQ8y7UO0AutKiTQpx3uHI' },
+      { title: 'Nee Paartha Vizhigal', artist: 'Sid Sriram', duration: '4:48', spotifyUrl: 'https://open.spotify.com/track/1SV9HkEpxGrDts292uxQgQ' },
+      { title: 'Kannana Kanne', artist: 'Sid Sriram', duration: '5:35', spotifyUrl: 'https://open.spotify.com/track/5gOKNHRw7nQeNmXAQiXPm3' }
+    ]
+  }
+};
+
+// Define playlists based on weather conditions (backup/original)
 const WEATHER_PLAYLISTS: Record<string, {
   title: string;
   mood: string;
@@ -196,6 +316,12 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
   const [playlist, setPlaylist] = useState<typeof WEATHER_PLAYLISTS['default']>(WEATHER_PLAYLISTS['default']);
   const [moodText, setMoodText] = useState<string>('');
   
+  // Random shuffle function to pick different songs each time
+  const getRandomItems = (array: any[], count: number = 3) => {
+    const shuffled = [...array].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
+  
   useEffect(() => {
     if (weather) {
       const condition = weather.current.condition.text.toLowerCase();
@@ -232,7 +358,16 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
         moodKey = 'Clear';
       }
       
-      setPlaylist(WEATHER_PLAYLISTS[playlistKey] || WEATHER_PLAYLISTS['default']);
+      // Use Tamil music playlists
+      const tamilPlaylist = TAMIL_WEATHER_PLAYLISTS[playlistKey] || TAMIL_WEATHER_PLAYLISTS['default'];
+      
+      // Create a shuffled version that has exactly 3 tracks
+      const selectedPlaylist = {
+        ...tamilPlaylist,
+        tracks: getRandomItems(tamilPlaylist.tracks, 3)
+      };
+      
+      setPlaylist(selectedPlaylist);
       setMoodText(MOOD_POPUP[moodKey as keyof typeof MOOD_POPUP] || '');
     }
   }, [weather]);
@@ -251,7 +386,7 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg flex items-center">
             <Music className="mr-2 h-5 w-5 text-primary" />
-            Weather-Based Music
+            Tamil Weather Beats
           </CardTitle>
           <Badge variant="secondary" className="font-normal">
             {playlist.mood}
@@ -314,7 +449,7 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
         
         <div className="mt-4 flex justify-between">
           <p className="text-xs text-muted-foreground">
-            Songs selected based on current weather conditions
+            Tamil songs selected based on current weather conditions
           </p>
           <Button 
             variant="default" 

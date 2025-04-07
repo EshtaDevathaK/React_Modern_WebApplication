@@ -20,7 +20,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { fetchWeatherData } from "@/lib/weatherService";
+import { fetchWeatherData } from "@/lib/weatherService2";
 import { BarChart2, Thermometer, Droplets, Wind, Sun, CloudRain } from "lucide-react";
 
 export default function Analytics() {
@@ -39,84 +39,207 @@ export default function Analytics() {
 
   // Generate temperature data from forecast
   const getTemperatureData = () => {
-    if (!weatherData) return [];
+    if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday) {
+      console.log("Analytics: Weather data format issue:", weatherData);
+      return [];
+    }
 
-    return weatherData.forecast.forecastday.flatMap((day: any) => 
-      day.hour.map((hour: any) => ({
-        time: new Date(hour.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: new Date(hour.time).toLocaleDateString([], { month: 'short', day: 'numeric' }),
-        temperature: hour.temp_c,
-        feelsLike: hour.feelslike_c,
-      }))
-    );
-  };
-
-  // Generate precipitation data
-  const getPrecipitationData = () => {
-    if (!weatherData) return [];
-
-    return weatherData.forecast.forecastday.map((day: any) => ({
-      date: new Date(day.date).toLocaleDateString([], { weekday: 'short' }),
-      rain: day.day.totalprecip_mm,
-      chance: day.day.daily_chance_of_rain,
-    }));
-  };
-
-  // Generate humidity data
-  const getHumidityData = () => {
-    if (!weatherData) return [];
-
-    return weatherData.forecast.forecastday.flatMap((day: any) => 
-      day.hour.filter((_: any, index: number) => index % 3 === 0).map((hour: any) => ({
-        time: new Date(hour.time).toLocaleTimeString([], { hour: '2-digit' }),
-        date: new Date(hour.time).toLocaleDateString([], { month: 'short', day: 'numeric' }),
-        humidity: hour.humidity,
-      }))
-    );
-  };
-
-  // Generate wind data
-  const getWindData = () => {
-    if (!weatherData) return [];
-
-    return weatherData.forecast.forecastday.map((day: any) => {
-      // Find the first hour that has wind_dir data
-      const midDayHour = day.hour.find((hour: any) => hour && hour.wind_dir) || {};
-      
-      return {
-        date: new Date(day.date).toLocaleDateString([], { weekday: 'short' }),
-        speed: day.day.maxwind_kph,
-        direction: midDayHour.wind_dir || 'N/A', // Use available data or default to N/A
-      };
-    });
-  };
-
-  // Generate UV data
-  const getUVData = () => {
-    if (!weatherData) return [];
-
-    return weatherData.forecast.forecastday.map((day: any) => ({
-      date: new Date(day.date).toLocaleDateString([], { weekday: 'short' }),
-      uv: day.day.uv,
-    }));
-  };
-
-  // Generate condition distribution data
-  const getConditionData = () => {
-    if (!weatherData) return [];
-
-    // Count occurrences of each condition type
-    const conditions: Record<string, number> = {};
-    
-    weatherData.forecast.forecastday.forEach((day: any) => {
-      day.hour.forEach((hour: any) => {
-        const condition = hour.condition.text;
-        conditions[condition] = (conditions[condition] || 0) + 1;
+    try {
+      return weatherData.forecast.forecastday.flatMap((day: any) => {
+        // Handle both data structures
+        if (day.hour && Array.isArray(day.hour)) {
+          return day.hour.map((hour: any) => {
+            // Get time from hour object
+            const timeString = hour.time || (hour.dt ? new Date(hour.dt * 1000).toISOString() : null);
+            const time = timeString ? new Date(timeString) : new Date();
+            
+            return {
+              time: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              date: time.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+              temperature: hour.temp_c !== undefined ? hour.temp_c : hour.temp !== undefined ? hour.temp : 0,
+              feelsLike: hour.feelslike_c !== undefined ? hour.feelslike_c : 
+                          hour.feels_like !== undefined ? hour.feels_like : 0,
+            };
+          });
+        } 
+        return [];
       });
-    });
+    } catch (error) {
+      console.error("Error parsing temperature data:", error);
+      return [];
+    }
+  };
 
-    // Convert to array for the pie chart
-    return Object.entries(conditions).map(([name, value]) => ({ name, value }));
+  // Generate precipitation data - adapted for weatherService2 structure
+  const getPrecipitationData = () => {
+    if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday) {
+      console.log("Analytics: Weather data format issue in precipitation:", weatherData);
+      return [];
+    }
+
+    try {
+      return weatherData.forecast.forecastday.map((day: any) => {
+        const date = day.date || (day.dt ? new Date(day.dt * 1000).toISOString().split('T')[0] : new Date().toISOString());
+        
+        return {
+          date: new Date(date).toLocaleDateString([], { weekday: 'short' }),
+          rain: day.day?.totalprecip_mm !== undefined ? day.day.totalprecip_mm : 
+                day.day?.rain !== undefined ? day.day.rain : 0,
+          chance: day.day?.daily_chance_of_rain !== undefined ? day.day.daily_chance_of_rain : 
+                  day.day?.chance_of_rain !== undefined ? day.day.chance_of_rain : 
+                  day.pop !== undefined ? Math.round(day.pop * 100) : 0,
+        };
+      });
+    } catch (error) {
+      console.error("Error parsing precipitation data:", error);
+      return [];
+    }
+  };
+
+  // Generate humidity data - adapted for weatherService2 structure
+  const getHumidityData = () => {
+    if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday) {
+      console.log("Analytics: Weather data format issue in humidity:", weatherData);
+      return [];
+    }
+
+    try {
+      return weatherData.forecast.forecastday.flatMap((day: any) => {
+        if (!day.hour || !Array.isArray(day.hour)) return [];
+        
+        return day.hour.filter((_: any, index: number) => index % 3 === 0).map((hour: any) => {
+          const timeString = hour.time || (hour.dt ? new Date(hour.dt * 1000).toISOString() : null);
+          const time = timeString ? new Date(timeString) : new Date();
+          
+          return {
+            time: time.toLocaleTimeString([], { hour: '2-digit' }),
+            date: time.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+            humidity: hour.humidity !== undefined ? hour.humidity : 0,
+          };
+        });
+      });
+    } catch (error) {
+      console.error("Error parsing humidity data:", error);
+      return [];
+    }
+  };
+
+  // Generate wind data - adapted for weatherService2 structure
+  const getWindData = () => {
+    if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday) {
+      console.log("Analytics: Weather data format issue in wind:", weatherData);
+      return [];
+    }
+
+    try {
+      return weatherData.forecast.forecastday.map((day: any) => {
+        const date = day.date || (day.dt ? new Date(day.dt * 1000).toISOString().split('T')[0] : new Date().toISOString());
+        
+        // Handle both data structures for midDayHour
+        let directionValue = 'N/A';
+        let speedValue = 0;
+        
+        if (day.hour && Array.isArray(day.hour)) {
+          // Try to find an hour with wind_dir data
+          const midDayHour = day.hour.find((hour: any) => hour && hour.wind_dir) || {};
+          directionValue = midDayHour.wind_dir || 'N/A';
+        }
+        
+        // Get speed from day data
+        if (day.day) {
+          speedValue = day.day.maxwind_kph !== undefined ? day.day.maxwind_kph : 
+                       day.day.wind_speed !== undefined ? day.day.wind_speed : 0;
+        }
+        
+        return {
+          date: new Date(date).toLocaleDateString([], { weekday: 'short' }),
+          speed: speedValue,
+          direction: directionValue,
+        };
+      });
+    } catch (error) {
+      console.error("Error parsing wind data:", error);
+      return [];
+    }
+  };
+
+  // Generate UV data - adapted for weatherService2 structure
+  const getUVData = () => {
+    if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday) {
+      console.log("Analytics: Weather data format issue in UV:", weatherData);
+      return [];
+    }
+
+    try {
+      return weatherData.forecast.forecastday.map((day: any) => {
+        const date = day.date || (day.dt ? new Date(day.dt * 1000).toISOString().split('T')[0] : new Date().toISOString());
+        
+        let uvValue = 0;
+        if (day.day) {
+          uvValue = day.day.uv !== undefined ? day.day.uv : 
+                   day.day.uvi !== undefined ? day.day.uvi : 0;
+        }
+        
+        return {
+          date: new Date(date).toLocaleDateString([], { weekday: 'short' }),
+          uv: uvValue,
+        };
+      });
+    } catch (error) {
+      console.error("Error parsing UV data:", error);
+      return [];
+    }
+  };
+
+  // Generate condition distribution data - adapted for weatherService2 structure
+  const getConditionData = () => {
+    if (!weatherData || !weatherData.forecast || !weatherData.forecast.forecastday) {
+      console.log("Analytics: Weather data format issue in conditions:", weatherData);
+      return [];
+    }
+
+    try {
+      // Count occurrences of each condition type
+      const conditions: Record<string, number> = {};
+      
+      weatherData.forecast.forecastday.forEach((day: any) => {
+        if (!day.hour || !Array.isArray(day.hour)) return;
+        
+        day.hour.forEach((hour: any) => {
+          if (!hour || !hour.condition) return;
+          
+          // Get condition text based on different API response formats
+          let conditionText = '';
+          if (hour.condition.text) {
+            conditionText = hour.condition.text;
+          } else if (hour.condition.main) {
+            conditionText = hour.condition.main;
+          } else if (hour.condition.description) {
+            conditionText = hour.condition.description;
+          } else if (hour.weather && hour.weather[0] && hour.weather[0].main) {
+            conditionText = hour.weather[0].main;
+          } else if (hour.weather && hour.weather[0] && hour.weather[0].description) {
+            conditionText = hour.weather[0].description;
+          } else {
+            return; // Skip if no condition text found
+          }
+          
+          // Capitalize first letter for consistency
+          conditionText = conditionText.charAt(0).toUpperCase() + conditionText.slice(1);
+          
+          conditions[conditionText] = (conditions[conditionText] || 0) + 1;
+        });
+      });
+
+      // Convert to array for the pie chart and sort by value descending
+      return Object.entries(conditions)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 6); // Limit to top 6 conditions for better visualization
+    } catch (error) {
+      console.error("Error parsing condition data:", error);
+      return [];
+    }
   };
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
