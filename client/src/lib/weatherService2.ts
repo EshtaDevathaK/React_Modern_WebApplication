@@ -180,7 +180,7 @@ const isDaytime = (dt: number, sunrise: number, sunset: number): boolean => {
   return dt >= sunrise && dt < sunset;
 };
 
-// Function to get geocoding for a location
+// Function to get geocoding for a location with improved region handling
 const getGeocode = async (city: string) => {
   try {
     const geocodingUrl = `${GEOCODING_API_URL}/direct?q=${encodeURIComponent(city)}&limit=1&appid=${OPENWEATHER_API_KEY}`;
@@ -201,10 +201,14 @@ const getGeocode = async (city: string) => {
       throw new Error('Location not found');
     }
     
+    // Extract region information - prioritize state over other potential region indicators
+    const region = data[0].state || '';
+    
     return {
       latitude: data[0].lat,
       longitude: data[0].lon,
       name: data[0].name,
+      region: region,
       country: data[0].country,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     };
@@ -249,6 +253,7 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
     let longitude = -118.2437;
     let locationName = "Los Angeles";
     let country = "US";
+    let region = "";
     
     // Try to get the coordinates and location name
     try {
@@ -259,8 +264,9 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
         latitude = geocode.latitude;
         longitude = geocode.longitude;
         locationName = geocode.name;
+        region = geocode.region || '';
         country = geocode.country;
-        console.log('Geocoding successful:', { latitude, longitude, locationName, country });
+        console.log('Geocoding successful:', { latitude, longitude, locationName, region, country });
       } else {
         // Use provided coordinates directly
         latitude = cityOrCoords.lat;
@@ -285,6 +291,7 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
           
           if (data && data.length > 0) {
             locationName = data[0].name;
+            region = data[0].state || ''; // Get region from reverse geocoding too
             country = data[0].country;
           }
         } catch (error) {
@@ -484,11 +491,12 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
       });
     }
     
-    // Return formatted weather data compatible with our app
+    // Return real-time formatted weather data compatible with our app
+    // Always pull fresh data for each location request with no caching
     return {
       location: {
         name: locationName,
-        region: '',
+        region: region, // Region properly scoped from above
         country: country,
         lat: latitude,
         lon: longitude,

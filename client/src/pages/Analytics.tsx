@@ -27,10 +27,14 @@ export default function Analytics() {
   const [searchLocation, setSearchLocation] = useState("Los Angeles");
   const [timeRange, setTimeRange] = useState("week");
   
-  const { data: weatherData, isLoading, error } = useQuery({
-    queryKey: ['weatherData', searchLocation],
+  // Fetch real-time weather data for analytics with a short cache time
+  const { data: weatherData, isLoading, error, refetch } = useQuery({
+    queryKey: ['analyticsData', searchLocation],
     queryFn: () => fetchWeatherData(searchLocation),
     enabled: !!searchLocation,
+    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes - short enough for regular updates
+    retry: 2,
   });
 
   const handleSearch = (location: string) => {
@@ -279,14 +283,26 @@ export default function Analytics() {
         {/* Header Section */}
         <Header onSearch={handleSearch} />
 
-        <h1 className="text-2xl font-bold mb-2 font-heading flex items-center">
-          <BarChart2 className="mr-2 h-6 w-6" />
-          Weather Analytics
-        </h1>
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-2xl font-bold font-heading flex items-center">
+            <BarChart2 className="mr-2 h-6 w-6" />
+            Weather Analytics
+          </h1>
+          
+          <button 
+            onClick={() => refetch()} 
+            className="px-3 py-1 bg-primary text-white rounded-md text-sm flex items-center hover:bg-primary/90 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Data
+          </button>
+        </div>
         
         {weatherData && (
           <p className="text-gray-600 mb-6">
-            Analyzing weather data for {weatherData.location.name}, {weatherData.location.country}
+            Analyzing real-time weather data for {weatherData.location.name}{weatherData.location.region ? `, ${weatherData.location.region}` : ""}, {weatherData.location.country}
           </p>
         )}
 

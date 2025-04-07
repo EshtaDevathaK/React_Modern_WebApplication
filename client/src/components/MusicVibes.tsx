@@ -358,13 +358,13 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
         moodKey = 'Clear';
       }
       
-      // Use Tamil music playlists
+      // Always use Tamil music playlists with direct Spotify links
       const tamilPlaylist = TAMIL_WEATHER_PLAYLISTS[playlistKey] || TAMIL_WEATHER_PLAYLISTS['default'];
       
-      // Create a shuffled version that has exactly 3 tracks
+      // Tamil songs for this weather condition (exactly 3 tracks)
       const selectedPlaylist = {
         ...tamilPlaylist,
-        tracks: getRandomItems(tamilPlaylist.tracks, 3)
+        tracks: tamilPlaylist.tracks.slice(0, 3) // Always use the first 3 tracks for consistency
       };
       
       setPlaylist(selectedPlaylist);
