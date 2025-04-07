@@ -18,11 +18,12 @@ import { getBackgroundColor } from "@/lib/weatherUtils";
 export default function Home() {
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [searchLocation, setSearchLocation] = useState("");
+  const [searchLocation, setSearchLocation] = useState("Los Angeles");
   
-  const { data: weatherData, isLoading, error } = useQuery({
-    queryKey: ['weatherData', 'Los Angeles'],
-    queryFn: () => fetchWeatherData('Los Angeles'),
+  const { data: weatherData, isLoading, error, refetch } = useQuery({
+    queryKey: ['weatherData', searchLocation],
+    queryFn: () => fetchWeatherData(searchLocation),
+    enabled: !!searchLocation,
   });
 
   // Set dynamic background based on weather condition
@@ -35,31 +36,36 @@ export default function Home() {
 
   // Show toast on initial load
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowToast(true);
+    if (weatherData) {
+      const timer = setTimeout(() => {
+        setShowToast(true);
+        
+        const hideTimer = setTimeout(() => {
+          setShowToast(false);
+        }, 5000);
+        
+        return () => clearTimeout(hideTimer);
+      }, 1000);
       
-      const hideTimer = setTimeout(() => {
-        setShowToast(false);
-      }, 5000);
-      
-      return () => clearTimeout(hideTimer);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [weatherData]);
 
   // Show mood suggestion modal after delay
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowMoodModal(true);
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    if (weatherData) {
+      const timer = setTimeout(() => {
+        setShowMoodModal(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [weatherData]);
 
   const handleSearch = (location: string) => {
     setSearchLocation(location);
-    // This would trigger a new query with the updated location
+    // Refetch with the new location
+    setTimeout(() => refetch(), 100); // Small delay to ensure state update
   };
 
   if (isLoading) {
@@ -91,9 +97,24 @@ export default function Home() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto md:ml-0">
         {/* Header Section */}
         <Header onSearch={handleSearch} />
+
+        {/* Greeting Section */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold font-heading text-navy">
+            {getGreetingByTime()} 
+            <span className="ml-2 text-primary">
+              {weatherData?.location.name 
+                ? `${weatherData.location.name}, ${weatherData.location.country}`
+                : ''}
+            </span>
+          </h1>
+          <p className="text-navy-light">
+            Here's your daily weather and mood forecast. Enjoy!
+          </p>
+        </div>
 
         {/* Current Weather & Chance of Rain */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -143,4 +164,17 @@ export default function Home() {
       />
     </div>
   );
+}
+
+// Helper function to get greeting based on time of day
+function getGreetingByTime(): string {
+  const hour = new Date().getHours();
+  
+  if (hour >= 5 && hour < 12) {
+    return "Good Morning in";
+  } else if (hour >= 12 && hour < 18) {
+    return "Good Afternoon in";
+  } else {
+    return "Good Evening in";
+  }
 }
