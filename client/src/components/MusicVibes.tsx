@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Music, ExternalLink, Play, ListMusic } from 'lucide-react';
+import { Music, ExternalLink, Play, ListMusic, Shuffle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -229,17 +229,66 @@ function normalizeWeatherCondition(weather: any): string {
   return 'default';
 }
 
-// Get playlist based on weather condition
+// Get playlist based on weather condition with mood-based shuffling
 function getWeatherPlaylist(weather: any) {
   const condition = normalizeWeatherCondition(weather);
   
   // Always prefer the Tamil playlists
+  let selectedPlaylist;
   if (TAMIL_WEATHER_PLAYLISTS[condition]) {
-    return TAMIL_WEATHER_PLAYLISTS[condition];
+    selectedPlaylist = {...TAMIL_WEATHER_PLAYLISTS[condition]};
+  } else {
+    // Fallback to general playlists if no Tamil one is available
+    selectedPlaylist = {...(WEATHER_PLAYLISTS[condition] || WEATHER_PLAYLISTS['default'])};
   }
   
-  // Fallback to general playlists if no Tamil one is available
-  return WEATHER_PLAYLISTS[condition] || WEATHER_PLAYLISTS['default'];
+  // Now shuffle tracks based on mood to ensure variety each time the weather changes
+  selectedPlaylist.tracks = shuffleArray([...selectedPlaylist.tracks]);
+  
+  // If we have less than 5 tracks in the main playlist, add some tracks from other moods
+  // that might still fit with the current weather condition
+  if (selectedPlaylist.tracks.length < 5) {
+    // Get tracks from other related mood playlists
+    const relatedConditions = getRelatedWeatherConditions(condition);
+    let additionalTracks: PlaylistTrack[] = [];
+    
+    relatedConditions.forEach(relatedCondition => {
+      const relatedPlaylist = TAMIL_WEATHER_PLAYLISTS[relatedCondition] || WEATHER_PLAYLISTS[relatedCondition];
+      if (relatedPlaylist && relatedPlaylist.tracks.length > 0) {
+        additionalTracks = [...additionalTracks, ...relatedPlaylist.tracks];
+      }
+    });
+    
+    // Add some additional tracks and re-shuffle
+    if (additionalTracks.length > 0) {
+      const totalNeeded = Math.min(5 - selectedPlaylist.tracks.length, additionalTracks.length);
+      selectedPlaylist.tracks = [
+        ...selectedPlaylist.tracks,
+        ...shuffleArray(additionalTracks).slice(0, totalNeeded)
+      ];
+    }
+  }
+  
+  return selectedPlaylist;
+}
+
+// Get related weather conditions for mood-based track recommendations
+function getRelatedWeatherConditions(condition: string): string[] {
+  // Map of conditions that have similar musical moods
+  const moodMap: Record<string, string[]> = {
+    'sunny': ['clear', 'hot'],
+    'clear': ['sunny', 'hot'],
+    'cloudy': ['fog', 'windy'],
+    'rain': ['thunderstorm', 'fog'],
+    'thunderstorm': ['rain', 'windy'],
+    'fog': ['cloudy', 'rain'],
+    'hot': ['sunny', 'clear'],
+    'cold': ['windy', 'cloudy'],
+    'windy': ['cold', 'cloudy'],
+    'default': ['clear', 'sunny', 'cloudy']
+  };
+  
+  return moodMap[condition] || moodMap['default'];
 }
 
 // Shuffle an array (Fisher-Yates algorithm)
@@ -274,6 +323,42 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
     description: string;
   } | null>(null);
   
+  // Keep track of whether the current toast is from a reshuffle action
+  const [isReshuffleToast, setIsReshuffleToast] = useState(false);
+  
+  // Add climate mood shuffling function
+  const reshuffleMoodTracks = () => {
+    if (selectedPlaylist) {
+      // Create a copy of the current playlist
+      const reshuffledPlaylist = {
+        ...selectedPlaylist,
+        tracks: shuffleArray([...selectedPlaylist.tracks])
+      };
+      
+      // Update the playlist with reshuffled tracks
+      setSelectedPlaylist(reshuffledPlaylist);
+      
+      // Set the reshuffle flag and show toast
+      setIsReshuffleToast(true);
+      setShowMoodToast(true);
+      
+      // Add subtle animation to the shuffle button for feedback
+      const shuffleButton = document.querySelector('.shuffle-button');
+      if (shuffleButton) {
+        shuffleButton.classList.add('animate-spin-once');
+        setTimeout(() => {
+          shuffleButton.classList.remove('animate-spin-once');
+        }, 500);
+      }
+      
+      setTimeout(() => {
+        setShowMoodToast(false);
+        // Reset the flag after toast is hidden
+        setTimeout(() => setIsReshuffleToast(false), 100);
+      }, 3000);
+    }
+  };
+  
   // Display mood toast briefly when component mounts
   useEffect(() => {
     setShowMoodToast(true);
@@ -291,9 +376,13 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
     }
   }, [weather]);
   
-  // Get mood message based on weather
-  const getMoodMessage = () => {
+  // Get mood message based on weather or shuffle action
+  const getMoodMessage = (isReshuffle: boolean = false) => {
     if (!weather || !weather.current || !weather.current.condition) return '';
+    
+    if (isReshuffle) {
+      return "Refreshed your climate mood playlist! ✨ Enjoy new vibes.";
+    }
     
     const condition = weather.current.condition.text.split(' ')[0];
     // Safely access the mood popup with type checking, defaulting to Clear if not found
@@ -338,9 +427,20 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
             <Music className="h-5 w-5 mr-2" />
             Music Vibes
           </CardTitle>
-          <Badge variant="outline" className="font-medium">
-            {selectedPlaylist.mood}
-          </Badge>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7 hover:bg-primary/10 hover:text-primary shuffle-button" 
+              title="Shuffle songs for your current mood"
+              onClick={reshuffleMoodTracks}
+            >
+              <Shuffle className="h-4 w-4" />
+            </Button>
+            <Badge variant="outline" className="font-medium">
+              {selectedPlaylist.mood}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       
@@ -350,10 +450,12 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
           <div className="bg-primary/10 text-primary rounded-md p-3 mb-4 flex items-start">
             <div className="text-xl mr-2">🎵</div>
             <p className="text-sm">
-              {getMoodMessage()}
+              {getMoodMessage(isReshuffleToast)}
               <br />
               <span className="text-xs text-muted-foreground">
-                Weather-matched {selectedPlaylist.title} ready for you!
+                {isReshuffleToast ? 
+                  `Fresh music selection for your ${selectedPlaylist.mood} mood!` : 
+                  `Weather-matched ${selectedPlaylist.title} ready for you!`}
               </span>
             </p>
           </div>
