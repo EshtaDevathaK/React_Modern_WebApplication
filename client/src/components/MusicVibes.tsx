@@ -303,35 +303,22 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
   // Open JioSaavn for a track
   const openJioSaavn = (trackUrl: string) => {
     try {
-      // Make sure the URL is properly formed
-      let formattedUrl = trackUrl;
-      
-      // Check if it's a full URL or just a song ID
-      if (!trackUrl.startsWith('http')) {
-        formattedUrl = `https://www.jiosaavn.com/song/${trackUrl}`;
-      }
-      
-      // Special handling for JioSaavn links
-      // Extract the song ID if it's a full URL to ensure we're using the proper format
-      if (formattedUrl.includes('jiosaavn.com/song/')) {
-        const url = new URL(formattedUrl);
-        const pathParts = url.pathname.split('/').filter(Boolean);
+      // Direct approach - go to JioSaavn's main site and let it handle search
+      // This is more reliable than trying to access specific song URLs
+      const songTitle = trackUrl.includes('/song/') 
+        ? trackUrl.split('/song/')[1].split('/')[0].replace(/-/g, ' ')
+        : trackUrl;
         
-        // JioSaavn URLs typically have the format /song/{song-name}/{song-id}
-        if (pathParts.length >= 2) {
-          const songId = pathParts[pathParts.length - 1];
-          // Use the mobile-friendly format which is more reliable
-          formattedUrl = `https://www.jiosaavn.com/song/_/${songId}`;
-        }
-      }
+      // Create a search URL that will work
+      const searchUrl = `https://www.jiosaavn.com/search/${encodeURIComponent(songTitle)}`;
       
       // Open in a new tab
-      window.open(formattedUrl, '_blank', 'noopener,noreferrer');
-      console.log('Opening JioSaavn URL:', formattedUrl);
+      window.open(searchUrl, '_blank', 'noopener,noreferrer');
+      console.log('Opening JioSaavn search URL:', searchUrl);
     } catch (error) {
       console.error('Error opening JioSaavn link:', error);
-      // Fallback to the original URL if something goes wrong
-      window.open(trackUrl, '_blank', 'noopener,noreferrer');
+      // Fallback to JioSaavn main page
+      window.open('https://www.jiosaavn.com/', '_blank', 'noopener,noreferrer');
     }
   };
   
