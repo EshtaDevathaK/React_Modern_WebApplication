@@ -1,7 +1,8 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { MapPin, Plus } from "lucide-react";
 import { getWeatherIcon } from "@/lib/weatherIcons";
 import { formatDate } from "@/lib/weatherUtils";
+import { getWeatherPhoto } from "@/lib/seasonalPhotos";
 
 interface CurrentWeatherProps {
   weather: any;
@@ -59,24 +60,17 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
   
   const moodSuggestion = getMoodSuggestion();
   
-  // Get background image based on weather condition
-  const getBackgroundImage = () => {
+  // Get background image based on weather condition and temperature
+  const weatherPhoto = useMemo(() => {
     const condition = weatherCondition.toLowerCase();
     
-    if (condition.includes("sunny") || condition.includes("clear")) {
-      return "https://images.unsplash.com/photo-1566219652774-a283222b9ce5?w=800&auto=format&fit=crop&q=80";
-    } else if (condition.includes("rain") || condition.includes("drizzle")) {
-      return "https://images.unsplash.com/photo-1519692933481-e162a57d6721?w=800&auto=format&fit=crop&q=80";
-    } else if (condition.includes("cloud") || condition.includes("overcast")) {
-      return "https://images.unsplash.com/photo-1445363692815-ebcd599f7621?w=800&auto=format&fit=crop&q=80";
-    } else if (condition.includes("snow") || condition.includes("blizzard")) {
-      return "https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=800&auto=format&fit=crop&q=80";
-    } else if (condition.includes("fog") || condition.includes("mist")) {
-      return "https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=800&auto=format&fit=crop&q=80";
-    } else {
-      return "https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=800&auto=format&fit=crop&q=80";
-    }
-  };
+    // Use the improved getWeatherPhoto function from seasonalPhotos.ts
+    // This will randomize and select appropriate photos based on both condition and temperature
+    return getWeatherPhoto(condition, temperature);
+  }, [weatherCondition, temperature]);
+  
+  // Format the URL with optimization parameters
+  const backgroundImage = `${weatherPhoto.url}?w=800&auto=format&fit=crop&q=80`;
   
   return (
     <div className="bg-white rounded-xl shadow-soft overflow-hidden">
@@ -97,10 +91,19 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
           {/* Weather Background Image */}
           <div className="relative rounded-lg overflow-hidden h-64 md:h-80">
             <img 
-              src={getBackgroundImage()} 
-              alt={`${location.name} Weather`} 
+              src={backgroundImage} 
+              alt={`${location.name} ${weatherCondition} Weather`} 
               className="w-full h-full object-cover"
             />
+            
+            {/* Photo Credit */}
+            {weatherPhoto.credit && (
+              <div className="absolute top-2 right-2">
+                <div className="bg-black/30 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md">
+                  Photo: {weatherPhoto.credit}
+                </div>
+              </div>
+            )}
             
             {/* Weather Info Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent text-white">
