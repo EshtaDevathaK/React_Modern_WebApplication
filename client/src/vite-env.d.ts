@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly OPENWEATHER_API_KEY: string;
+  readonly VITE_OPENWEATHER_API_KEY: string;
   // Add other environment variables as needed
 }
 

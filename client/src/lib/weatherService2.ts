@@ -2,7 +2,7 @@
 // Using environment variables for API key security
 
 // API Configuration
-const OPENWEATHER_API_KEY = import.meta.env.OPENWEATHER_API_KEY || '';
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || '33380abeed3051f5eef2276c1a2b6036'; // Fallback to hardcoded key if env variable is not available
 const API_URL = 'https://api.openweathermap.org/data/2.5';
 const GEOCODING_API_URL = 'https://api.openweathermap.org/geo/1.0';
 
@@ -183,17 +183,21 @@ const isDaytime = (dt: number, sunrise: number, sunset: number): boolean => {
 // Function to get geocoding for a location
 const getGeocode = async (city: string) => {
   try {
-    const response = await fetch(
-      `${GEOCODING_API_URL}/direct?q=${encodeURIComponent(city)}&limit=1&appid=${OPENWEATHER_API_KEY}`
-    );
+    const geocodingUrl = `${GEOCODING_API_URL}/direct?q=${encodeURIComponent(city)}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+    console.log('Geocoding URL:', geocodingUrl);
+    
+    const response = await fetch(geocodingUrl);
     
     if (!response.ok) {
-      throw new Error('Failed to geocode location');
+      console.error('Geocoding request failed with status:', response.status, response.statusText);
+      throw new Error(`Failed to geocode location: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
+    console.log('Geocoding response data:', data);
     
     if (!data || data.length === 0) {
+      console.error('Geocoding returned empty results for city:', city);
       throw new Error('Location not found');
     }
     
@@ -237,63 +241,99 @@ export const getCurrentLocation = (): Promise<{ lat: number, lon: number }> => {
 // Function to fetch weather data by location name or coordinates
 export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon: number }) => {
   try {
-    let latitude: number;
-    let longitude: number;
-    let locationName: string;
-    let country: string;
+    console.log('API Key:', OPENWEATHER_API_KEY ? `API key exists (${OPENWEATHER_API_KEY.substring(0, 4)}...)` : 'API key missing');
+    console.log('Fetching weather for:', typeof cityOrCoords === 'string' ? cityOrCoords : `Coordinates: ${cityOrCoords.lat}, ${cityOrCoords.lon}`);
     
-    // If cityOrCoords is a string, get coordinates via geocoding
-    if (typeof cityOrCoords === 'string') {
-      const geocode = await getGeocode(cityOrCoords);
-      latitude = geocode.latitude;
-      longitude = geocode.longitude;
-      locationName = geocode.name;
-      country = geocode.country;
-    } else {
-      // Use provided coordinates directly
-      latitude = cityOrCoords.lat;
-      longitude = cityOrCoords.lon;
-      
-      // Reverse geocoding to get location name
-      try {
-        const response = await fetch(
-          `${GEOCODING_API_URL}/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${OPENWEATHER_API_KEY}`
-        );
-        const data = await response.json();
+    // Default location if everything fails
+    let latitude = 34.0522;  // Los Angeles
+    let longitude = -118.2437;
+    let locationName = "Los Angeles";
+    let country = "US";
+    
+    // Try to get the coordinates and location name
+    try {
+      // If cityOrCoords is a string, get coordinates via geocoding
+      if (typeof cityOrCoords === 'string') {
+        console.log('Geocoding for location:', cityOrCoords);
+        const geocode = await getGeocode(cityOrCoords);
+        latitude = geocode.latitude;
+        longitude = geocode.longitude;
+        locationName = geocode.name;
+        country = geocode.country;
+        console.log('Geocoding successful:', { latitude, longitude, locationName, country });
+      } else {
+        // Use provided coordinates directly
+        latitude = cityOrCoords.lat;
+        longitude = cityOrCoords.lon;
+        console.log('Using provided coordinates:', { latitude, longitude });
         
-        if (data && data.length > 0) {
-          locationName = data[0].name;
-          country = data[0].country;
-        } else {
-          locationName = "Unknown Location";
-          country = "";
+        // Reverse geocoding to get location name
+        try {
+          console.log('Reverse geocoding for coordinates:', { latitude, longitude });
+          const reverseGeoUrl = `${GEOCODING_API_URL}/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+          console.log('Reverse geocoding URL:', reverseGeoUrl);
+          
+          const response = await fetch(reverseGeoUrl);
+          
+          if (!response.ok) {
+            console.error('Reverse geocoding failed with status:', response.status);
+            throw new Error(`Reverse geocoding failed: ${response.status} ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          console.log('Reverse geocoding data:', data);
+          
+          if (data && data.length > 0) {
+            locationName = data[0].name;
+            country = data[0].country;
+          }
+        } catch (error) {
+          console.error('Reverse geocoding error:', error);
+          // Keep the default values
         }
-      } catch (error) {
-        console.error('Reverse geocoding error:', error);
-        locationName = "Current Location";
-        country = "";
       }
+    } catch (error) {
+      console.error('Error in location resolution:', error);
+      // Continue with default values
     }
     
-    // Fetch current weather data
-    const currentWeatherUrl = `${API_URL}/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`;
-    const currentWeatherResponse = await fetch(currentWeatherUrl);
+    // Fetch current weather data and forecast data
+    let currentWeatherData;
+    let forecastData;
     
-    if (!currentWeatherResponse.ok) {
-      throw new Error('Failed to fetch current weather data');
+    try {
+      console.log('Fetching current weather data...');
+      const currentWeatherUrl = `${API_URL}/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`;
+      console.log('Current weather URL:', currentWeatherUrl);
+      
+      const currentWeatherResponse = await fetch(currentWeatherUrl);
+      
+      if (!currentWeatherResponse.ok) {
+        console.error('Current weather request failed with status:', currentWeatherResponse.status);
+        throw new Error(`Failed to fetch current weather data: ${currentWeatherResponse.status} ${currentWeatherResponse.statusText}`);
+      }
+      
+      currentWeatherData = await currentWeatherResponse.json();
+      console.log('Current weather data retrieved successfully');
+      
+      // Fetch 5-day forecast data
+      console.log('Fetching forecast data...');
+      const forecastUrl = `${API_URL}/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`;
+      console.log('Forecast URL:', forecastUrl);
+      
+      const forecastResponse = await fetch(forecastUrl);
+      
+      if (!forecastResponse.ok) {
+        console.error('Forecast request failed with status:', forecastResponse.status);
+        throw new Error(`Failed to fetch forecast data: ${forecastResponse.status} ${forecastResponse.statusText}`);
+      }
+      
+      forecastData = await forecastResponse.json();
+      console.log('Forecast data retrieved successfully');
+    } catch (error) {
+      console.error('Error fetching weather or forecast data:', error);
+      throw error;
     }
-    
-    const currentWeatherData = await currentWeatherResponse.json();
-    
-    // Fetch 5-day forecast data
-    const forecastUrl = `${API_URL}/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`;
-    const forecastResponse = await fetch(forecastUrl);
-    
-    if (!forecastResponse.ok) {
-      throw new Error('Failed to fetch forecast data');
-    }
-    
-    const forecastData = await forecastResponse.json();
     
     // Process current weather data
     const isDay = isDaytime(
