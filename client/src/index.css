@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer components {
+  .shadow-soft {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+  
+  .shadow-elevation {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+  
+  .shadow-card {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  }
+  
+  .bg-navy {
+    @apply bg-slate-800;
+  }
+  
+  .text-navy {
+    @apply text-slate-800;
+  }
+  
+  .text-navy-light {
+    @apply text-slate-600;
+  }
+  
+  .bg-primary-light {
+    @apply bg-blue-400;
+  }
+  
+  .bg-primary-dark {
+    @apply bg-blue-600;
+  }
+  
+  .bg-secondary {
+    @apply bg-indigo-200;
+  }
+  
+  .bg-secondary-light {
+    @apply bg-indigo-50;
+  }
+  
+  .progress-bar {
+    height: 6px;
+    transition: width 0.3s ease;
+  }
+  
+  .animate-in {
+    animation-duration: 300ms;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+  }
+  
+  .zoom-in-95 {
+    animation-name: zoomIn95;
+  }
+  
+  @keyframes zoomIn95 {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
