@@ -1,8 +1,11 @@
 // Weather API integration using OpenWeather API
 // Using environment variables for API key security
 
-// API Configuration
-const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY; // Using environment variable for API key security
+// API Configuration 
+// Get the API key from environment variable
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+
+// Define API endpoints
 const API_URL = 'https://api.openweathermap.org/data/2.5';
 const GEOCODING_API_URL = 'https://api.openweathermap.org/geo/1.0';
 
@@ -245,8 +248,14 @@ export const getCurrentLocation = (): Promise<{ lat: number, lon: number }> => {
 // Function to fetch weather data by location name or coordinates
 export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon: number }) => {
   try {
-    console.log('API Key:', OPENWEATHER_API_KEY ? `API key exists (${OPENWEATHER_API_KEY.substring(0, 4)}...)` : 'API key missing');
+    // Check for API key and log its status
+    console.log('API Key:', OPENWEATHER_API_KEY ? "API key available" : "API key missing");
     console.log('Fetching weather for:', typeof cityOrCoords === 'string' ? cityOrCoords : `Coordinates: ${cityOrCoords.lat}, ${cityOrCoords.lon}`);
+    
+    // Validate API key before proceeding
+    if (!OPENWEATHER_API_KEY) {
+      throw new Error("OpenWeather API key is missing. Please ensure VITE_OPENWEATHER_API_KEY is set in the environment variables.");
+    }
     
     // Default location if everything fails
     let latitude = 34.0522;  // Los Angeles
@@ -260,6 +269,9 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
       // If cityOrCoords is a string, get coordinates via geocoding
       if (typeof cityOrCoords === 'string') {
         console.log('Geocoding for location:', cityOrCoords);
+        const geocodingUrl = `${GEOCODING_API_URL}/direct?q=${encodeURIComponent(cityOrCoords)}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+        console.log('Geocoding URL:', geocodingUrl);
+        
         const geocode = await getGeocode(cityOrCoords);
         latitude = geocode.latitude;
         longitude = geocode.longitude;

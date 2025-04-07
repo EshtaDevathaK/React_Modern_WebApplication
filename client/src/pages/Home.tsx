@@ -15,15 +15,40 @@ import MoodToast from "@/components/MoodToast";
 import { fetchWeatherData } from "@/lib/weatherService2";
 import { getBackgroundColor } from "@/lib/weatherUtils";
 
+// Get a greeting based on current time of day
+function getGreetingByTime(): string {
+  const hour = new Date().getHours();
+  
+  if (hour >= 5 && hour < 12) {
+    return "Good Morning in";
+  } else if (hour >= 12 && hour < 18) {
+    return "Good Afternoon in";
+  } else {
+    return "Good Evening in";
+  }
+}
+
 export default function Home() {
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [searchLocation, setSearchLocation] = useState("Los Angeles");
+  const [apiKeyError, setApiKeyError] = useState(false);
   
   const { data: weatherData, isLoading, error, refetch } = useQuery({
     queryKey: ['weatherData', searchLocation],
-    queryFn: () => fetchWeatherData(searchLocation),
+    queryFn: async () => {
+      try {
+        return await fetchWeatherData(searchLocation);
+      } catch (err: any) {
+        // Check if error is related to API key
+        if (err?.message?.includes('API key')) {
+          setApiKeyError(true);
+        }
+        throw err;
+      }
+    },
     enabled: !!searchLocation,
+    retry: 1, // Only retry once on error
   });
 
   // Set dynamic background based on weather condition
@@ -82,10 +107,39 @@ export default function Home() {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-secondary-light">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto p-6 rounded-lg shadow-lg bg-white">
           <div className="text-4xl mb-4">⚠️</div>
-          <p className="text-navy font-medium">Failed to load weather data</p>
-          <p className="text-gray-600 mt-2">Please try again later</p>
+          <h2 className="text-xl font-bold text-navy mb-2">Failed to load weather data</h2>
+          
+          {apiKeyError ? (
+            <>
+              <p className="text-gray-700 mb-4">
+                OpenWeather API key is missing or invalid. Please ensure you have a valid API key configured.
+              </p>
+              <div className="text-sm text-gray-600 p-3 bg-gray-100 rounded mb-4">
+                <p className="font-medium">Troubleshooting:</p>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>Check if your API key is correctly configured</li>
+                  <li>Verify that your API key has weather data access permissions</li>
+                  <li>Contact support if the issue persists</li>
+                </ul>
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-600 mt-2">
+              Please check your internet connection and try again later.
+            </p>
+          )}
+          
+          <button 
+            onClick={() => {
+              setApiKeyError(false);
+              refetch();
+            }}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -164,17 +218,4 @@ export default function Home() {
       />
     </div>
   );
-}
-
-// Helper function to get greeting based on time of day
-function getGreetingByTime(): string {
-  const hour = new Date().getHours();
-  
-  if (hour >= 5 && hour < 12) {
-    return "Good Morning in";
-  } else if (hour >= 12 && hour < 18) {
-    return "Good Afternoon in";
-  } else {
-    return "Good Evening in";
-  }
 }

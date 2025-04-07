@@ -1,8 +1,9 @@
-import { FC, useMemo } from "react";
-import { MapPin, Plus } from "lucide-react";
+import { FC, useMemo, useState, useEffect } from "react";
+import { MapPin, Plus, RefreshCcw } from "lucide-react";
 import { getWeatherIcon } from "@/lib/weatherIcons";
 import { formatDate } from "@/lib/weatherUtils";
 import { getWeatherPhoto } from "@/lib/seasonalPhotos";
+import { cn } from "@/lib/utils";
 
 interface CurrentWeatherProps {
   weather: any;
@@ -112,8 +113,27 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
     return getWeatherPhoto(condition, temperature);
   }, [weatherCondition, temperature]);
   
+  // State to handle manual image refresh
+  const [currentPhoto, setCurrentPhoto] = useState(weatherPhoto);
+  const [isChanging, setIsChanging] = useState(false);
+  
+  // Update current photo when weather photo changes (from props)
+  useEffect(() => {
+    setCurrentPhoto(weatherPhoto);
+  }, [weatherPhoto]);
+  
+  // Handle manual image refresh on click
+  const refreshImage = () => {
+    setIsChanging(true);
+    setTimeout(() => {
+      const newPhoto = getWeatherPhoto(weatherCondition.toLowerCase(), temperature);
+      setCurrentPhoto(newPhoto);
+      setIsChanging(false);
+    }, 300); // Wait for fade-out animation to complete
+  };
+  
   // Format the URL with optimization parameters
-  const backgroundImage = `${weatherPhoto.url}?w=800&auto=format&fit=crop&q=80`;
+  const backgroundImage = `${currentPhoto.url}?w=800&auto=format&fit=crop&q=80`;
   
   return (
     <div className="bg-white rounded-xl shadow-soft overflow-hidden">
@@ -132,35 +152,56 @@ const CurrentWeather: FC<CurrentWeatherProps> = ({ weather }) => {
         
         <div className="relative">
           {/* Weather Background Image with Seasonal Gradient Overlay */}
-          <div className="relative rounded-lg overflow-hidden h-64 md:h-80">
-            <img 
-              src={backgroundImage} 
-              alt={`${location.name || 'Location'} ${weatherCondition} Weather`} 
-              className="w-full h-full object-cover"
-            />
-            {/* Seasonal gradient overlay */}
-            {weatherPhoto.gradientOverlay && (
+          <div 
+            className="relative rounded-lg overflow-hidden h-64 md:h-80 cursor-pointer" 
+            onClick={refreshImage}
+            title="Click to see more photos for this weather"
+          >
+            {/* Image with transition effect */}
+            <div className="absolute inset-0 transition-opacity duration-300 ease-in-out">
+              <img 
+                src={backgroundImage} 
+                alt={`${location.name || 'Location'} ${weatherCondition} Weather`} 
+                className={cn(
+                  "w-full h-full object-cover transition-opacity duration-300", 
+                  isChanging ? "opacity-0" : "opacity-100"
+                )}
+              />
+            </div>
+            
+            {/* Seasonal gradient overlay with transition */}
+            {currentPhoto.gradientOverlay && (
               <div 
-                className="absolute inset-0 pointer-events-none" 
+                className={cn(
+                  "absolute inset-0 pointer-events-none transition-opacity duration-300", 
+                  isChanging ? "opacity-0" : "opacity-100"
+                )}
                 style={{ 
-                  background: weatherPhoto.gradientOverlay,
+                  background: currentPhoto.gradientOverlay,
                   mixBlendMode: 'overlay'
                 }}
                 aria-hidden="true"
               />
             )}
+            
+            {/* Refresh indicator */}
+            <div className="absolute top-3 left-3 bg-black/30 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-black/50 transition-colors">
+              <RefreshCcw className="h-3 w-3" />
+              <span>Change Photo</span>
+            </div>
+            
             {/* Season indicator */}
-            {weatherPhoto.season && (
+            {currentPhoto.season && (
               <div className="absolute top-3 right-3 bg-black/30 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-                {weatherPhoto.season.charAt(0).toUpperCase() + weatherPhoto.season.slice(1)}
+                {currentPhoto.season.charAt(0).toUpperCase() + currentPhoto.season.slice(1)}
               </div>
             )}
             
             {/* Photo Credit */}
-            {weatherPhoto.credit && (
+            {currentPhoto.credit && (
               <div className="absolute top-2 right-2">
                 <div className="bg-black/30 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md">
-                  Photo: {weatherPhoto.credit}
+                  Photo: {currentPhoto.credit}
                 </div>
               </div>
             )}

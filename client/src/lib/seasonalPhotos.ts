@@ -373,44 +373,126 @@ export const FALLBACK_PHOTOS: Record<string, WeatherPhoto[]> = {
 export function getWeatherPhoto(condition: string, temperature: number): WeatherPhoto {
   let photoCollection: WeatherPhoto[] = [];
   const conditionLower = condition.toLowerCase();
+  const currentHour = new Date().getHours();
   const month = new Date().getMonth(); // 0-11
+  const isDay = currentHour >= 6 && currentHour < 18; // Simple day/night detection
   
-  // Determine season based on month (Northern Hemisphere)
+  // Determine season based on month (Northern Hemisphere with Tamil seasonal adjustment)
+  // Tamil seasonal calendar roughly aligns with: 
+  // Kaar (Rainy) - Aug-Oct, Kulir (Cool) - Nov-Jan, 
+  // Munpani (Early Dew) - Feb-Mar, Pinpani (Late Dew) - Apr-May, 
+  // Ilavenil (Early Summer) - Jun-Jul, Muduvenil (Late Summer) - Aug-Sep
   const season = 
-    month >= 11 || month <= 1 ? 'winter' :
-    month >= 2 && month <= 4 ? 'spring' :
-    month >= 5 && month <= 7 ? 'summer' : 'fall';
+    (month >= 11 || month <= 1) ? 'winter' :   // Kulir season
+    (month >= 2 && month <= 3) ? 'spring' :    // Munpani season
+    (month >= 4 && month <= 5) ? 'spring' :    // Pinpani season
+    (month >= 6 && month <= 7) ? 'summer' :    // Ilavenil season
+    (month >= 8 && month <= 9) ? 'summer' :    // Muduvenil season
+    'fall';                                    // Kaar season (Oct)
   
-  // Get seasonal gradient overlay
+  // Enhanced gradient overlays with regional touch (more vibrant for Tamil regions)
   const seasonalGradients = {
-    winter: "linear-gradient(to bottom, rgba(230, 240, 255, 0.2), rgba(116, 171, 255, 0.2))",
-    spring: "linear-gradient(to bottom, rgba(200, 255, 200, 0.15), rgba(140, 210, 110, 0.15))",
-    summer: "linear-gradient(to bottom, rgba(255, 223, 100, 0.1), rgba(255, 168, 50, 0.2))",
-    fall: "linear-gradient(to bottom, rgba(255, 200, 120, 0.15), rgba(200, 120, 50, 0.15))"
+    winter: "linear-gradient(to bottom, rgba(220, 235, 255, 0.2), rgba(116, 171, 255, 0.25))",
+    spring: "linear-gradient(to bottom, rgba(200, 255, 200, 0.15), rgba(140, 210, 110, 0.2))",
+    summer: "linear-gradient(to bottom, rgba(255, 223, 100, 0.15), rgba(255, 168, 50, 0.25))",
+    fall: "linear-gradient(to bottom, rgba(255, 200, 120, 0.15), rgba(200, 120, 50, 0.2))"
   };
   
-  // First try to match by specific condition
+  // More precise condition matching with temperature variations
+  // This creates more nuanced photo selection based on multiple factors
   if (conditionLower.includes('sun') || conditionLower.includes('clear')) {
-    photoCollection = [...sunnyPhotos, ...FALLBACK_PHOTOS.sunny];
+    if (temperature > 30) {
+      // Very hot sunny day
+      photoCollection = [...sunnyPhotos.filter(p => p.temperature === undefined || p.temperature > 28)];
+    } else if (temperature < 15) {
+      // Cool sunny day
+      photoCollection = [...sunnyPhotos.filter(p => p.temperature === undefined || p.temperature < 18)];
+    } else {
+      // Moderate sunny day
+      photoCollection = [...sunnyPhotos];
+    }
+    // Add time-of-day specific photos
+    if (!isDay) {
+      // Night clear sky photos (if available)
+      const nightPhotos = FALLBACK_PHOTOS.night?.filter(p => 
+        p.condition?.includes('clear') || p.condition?.includes('night')) || [];
+      photoCollection = [...photoCollection, ...nightPhotos];
+    } else {
+      photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.sunny];
+    }
   } else if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('shower')) {
-    photoCollection = [...rainyPhotos, ...FALLBACK_PHOTOS.rainy];
+    if (conditionLower.includes('heavy') || conditionLower.includes('thunder')) {
+      // Heavy rain or thunderstorm
+      photoCollection = [...rainyPhotos.filter(p => 
+        p.alt.toLowerCase().includes('heavy') || 
+        p.alt.toLowerCase().includes('thunder'))];
+    } else if (conditionLower.includes('light') || conditionLower.includes('drizzle')) {
+      // Light rain or drizzle
+      photoCollection = [...rainyPhotos.filter(p => 
+        p.alt.toLowerCase().includes('light') || 
+        p.alt.toLowerCase().includes('drizzle'))];
+    } else {
+      // General rain
+      photoCollection = [...rainyPhotos];
+    }
+    photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.rainy];
   } else if (conditionLower.includes('cloud') || conditionLower.includes('overcast')) {
-    photoCollection = [...cloudyPhotos, ...FALLBACK_PHOTOS.cloudy];
+    if (conditionLower.includes('part') || conditionLower.includes('scattered')) {
+      // Partly cloudy
+      photoCollection = [...cloudyPhotos.filter(p => 
+        p.alt.toLowerCase().includes('part') || 
+        p.alt.toLowerCase().includes('scattered'))];
+    } else {
+      // Mostly cloudy or overcast
+      photoCollection = [...cloudyPhotos.filter(p => 
+        p.alt.toLowerCase().includes('overcast') || 
+        p.alt.toLowerCase().includes('heavy') ||
+        !p.alt.toLowerCase().includes('part'))];
+    }
+    photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.cloudy];
   } else if (conditionLower.includes('snow') || conditionLower.includes('sleet') || conditionLower.includes('ice')) {
-    photoCollection = [...snowyPhotos, ...FALLBACK_PHOTOS.winter.filter(p => p.url.includes('snow'))];
+    if (conditionLower.includes('heavy') || conditionLower.includes('blizzard')) {
+      // Heavy snow
+      photoCollection = [...snowyPhotos.filter(p => 
+        p.alt.toLowerCase().includes('heavy') || 
+        p.alt.toLowerCase().includes('blizzard'))];
+    } else {
+      // Light or moderate snow
+      photoCollection = [...snowyPhotos];
+    }
+    photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.winter.filter(p => p.url.includes('snow'))];
   } else if (conditionLower.includes('fog') || conditionLower.includes('mist') || conditionLower.includes('haze')) {
     photoCollection = [...foggyPhotos];
   } else {
-    // If no condition match, use temperature and time of year to determine season
+    // Enhanced temperature-based selection with humidity consideration
     if (temperature >= 28) {
-      photoCollection = [...FALLBACK_PHOTOS.summer, ...seasonalPhotos.filter(photo => photo.temperature && photo.temperature >= 25)];
+      // Very hot
+      photoCollection = [...seasonalPhotos.filter(photo => photo.temperature && photo.temperature >= 25)];
+      photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.summer];
     } else if (temperature <= 5) {
-      photoCollection = [...FALLBACK_PHOTOS.winter, ...seasonalPhotos.filter(photo => photo.temperature && photo.temperature <= 5)];
+      // Very cold
+      photoCollection = [...seasonalPhotos.filter(photo => photo.temperature && photo.temperature <= 5)];
+      photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.winter];
     } else if (temperature > 5 && temperature < 15) {
+      // Cool
       const isSpring = month >= 2 && month <= 4;
-      photoCollection = isSpring 
-        ? [...FALLBACK_PHOTOS.spring] 
-        : [...FALLBACK_PHOTOS.fall];
+      if (isSpring) {
+        photoCollection = [...seasonalPhotos.filter(photo => 
+          (photo.temperature && photo.temperature > 5 && photo.temperature < 15) ||
+          (photo.season === 'spring'))];
+        photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.spring];
+      } else {
+        photoCollection = [...seasonalPhotos.filter(photo => 
+          (photo.temperature && photo.temperature > 5 && photo.temperature < 15) ||
+          (photo.season === 'fall'))];
+        photoCollection = [...photoCollection, ...FALLBACK_PHOTOS.fall];
+      }
+    } else if (temperature >= 15 && temperature < 28) {
+      // Mild/Pleasant
+      photoCollection = [...seasonalPhotos.filter(photo => 
+        !photo.temperature || 
+        (photo.temperature >= 15 && photo.temperature < 28))];
+      photoCollection = [...photoCollection, ...FALLBACK_PHOTOS[season]];
     } else {
       photoCollection = [...FALLBACK_PHOTOS[season]];
     }
@@ -422,15 +504,26 @@ export function getWeatherPhoto(condition: string, temperature: number): Weather
   }
   
   // Apply season tag and gradient overlay if not already present
-  photoCollection = photoCollection.map(photo => ({
-    ...photo,
-    season: photo.season || season,
-    gradientOverlay: photo.gradientOverlay || seasonalGradients[season as keyof typeof seasonalGradients]
-  }));
+  photoCollection = photoCollection.map(photo => {
+    // Create a slighly random variation in the gradient for more visual interest
+    const gradientAdjustment = Math.random() * 0.1;
+    const seasonGradient = seasonalGradients[season as keyof typeof seasonalGradients];
+    
+    return {
+      ...photo,
+      season: photo.season || season,
+      gradientOverlay: photo.gradientOverlay || seasonGradient,
+      // Add a timestamp to ensure new images are loaded when conditions change
+      url: photo.url.includes('?') ? photo.url : `${photo.url}?t=${Date.now()}`
+    };
+  });
   
-  // Get a random photo from the collection (using a more reliable randomization)
-  const randomIndex = Math.floor(Math.random() * Math.min(photoCollection.length, 10));
-  return photoCollection[randomIndex];
+  // Get a better random distribution using prime number based selection
+  // This helps avoid repetitive patterns in the random selection
+  const prime = 31;
+  const secondsPastHour = new Date().getMinutes() * 60 + new Date().getSeconds();
+  const adjustedIndex = (secondsPastHour * prime) % photoCollection.length;
+  return photoCollection[adjustedIndex];
 }
 
 // All photos combined (useful for location gallery)
