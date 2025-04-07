@@ -79,11 +79,16 @@ export default function Analytics() {
   const getWindData = () => {
     if (!weatherData) return [];
 
-    return weatherData.forecast.forecastday.map((day: any) => ({
-      date: new Date(day.date).toLocaleDateString([], { weekday: 'short' }),
-      speed: day.day.maxwind_kph,
-      direction: day.hour[12].wind_dir, // Use noon data for direction
-    }));
+    return weatherData.forecast.forecastday.map((day: any) => {
+      // Find the first hour that has wind_dir data
+      const midDayHour = day.hour.find((hour: any) => hour && hour.wind_dir) || {};
+      
+      return {
+        date: new Date(day.date).toLocaleDateString([], { weekday: 'short' }),
+        speed: day.day.maxwind_kph,
+        direction: midDayHour.wind_dir || 'N/A', // Use available data or default to N/A
+      };
+    });
   };
 
   // Generate UV data
