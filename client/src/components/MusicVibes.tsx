@@ -372,12 +372,21 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
     }
   }, [weather]);
 
+  // Function to open Spotify URL - ensure direct song URLs work correctly
   const openSpotify = (trackUrl: string) => {
-    window.open(trackUrl, '_blank');
+    // Make sure the URL is properly formed with https:// prefix
+    const formattedUrl = trackUrl.startsWith('http') ? trackUrl : `https://open.spotify.com/track/${trackUrl}`;
+    window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+    // Log for debugging
+    console.log('Opening Spotify URL:', formattedUrl);
   };
 
+  // Function to open the complete playlist in Spotify
   const openPlaylist = () => {
-    window.open(`https://open.spotify.com/playlist/${playlist.spotifyId}`, '_blank');
+    const playlistUrl = `https://open.spotify.com/playlist/${playlist.spotifyId}`;
+    window.open(playlistUrl, '_blank', 'noopener,noreferrer');
+    // Log for debugging
+    console.log('Opening Spotify playlist:', playlistUrl);
   };
 
   return (
