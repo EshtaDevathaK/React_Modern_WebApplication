@@ -336,31 +336,19 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
       currentWeatherData = await currentWeatherResponse.json();
       console.log('Current weather data retrieved successfully');
       
-      // Fetch OneCall API data for comprehensive forecast
-      console.log('Fetching OneCall API data...');
-      const oneCallUrl = `${ONECALL_API_URL}?lat=${latitude}&lon=${longitude}&exclude=minutely,alerts&units=metric&appid=${OPENWEATHER_API_KEY}`;
-      console.log('OneCall API URL:', oneCallUrl);
+      // Skip OneCall API 3.0 which requires subscription and go directly to the standard forecast API
+      console.log('Fetching standard forecast API data...');
+      const forecastUrl = `${API_URL}/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`;
+      console.log('Forecast URL:', forecastUrl);
       
-      const oneCallResponse = await fetch(oneCallUrl);
+      const forecastResponse = await fetch(forecastUrl);
       
-      if (!oneCallResponse.ok) {
-        console.error('OneCall API request failed with status:', oneCallResponse.status);
-        // Fallback to regular forecast API if OneCall fails
-        console.log('Falling back to regular forecast API...');
-        const forecastUrl = `${API_URL}/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${OPENWEATHER_API_KEY}`;
-        console.log('Forecast URL:', forecastUrl);
-        
-        const forecastResponse = await fetch(forecastUrl);
-        
-        if (!forecastResponse.ok) {
-          console.error('Forecast request failed with status:', forecastResponse.status);
-          throw new Error(`Failed to fetch forecast data: ${forecastResponse.status} ${forecastResponse.statusText}`);
-        }
-        
-        oneCallData = { forecast: await forecastResponse.json(), isLegacyForecast: true };
-      } else {
-        oneCallData = { ...await oneCallResponse.json(), isLegacyForecast: false };
+      if (!forecastResponse.ok) {
+        console.error('Forecast request failed with status:', forecastResponse.status);
+        throw new Error(`Failed to fetch forecast data: ${forecastResponse.status} ${forecastResponse.statusText}`);
       }
+      
+      oneCallData = { forecast: await forecastResponse.json(), isLegacyForecast: true };
       
       console.log('Forecast data retrieved successfully');
     } catch (error) {

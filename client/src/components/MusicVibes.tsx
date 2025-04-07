@@ -302,11 +302,37 @@ const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
   
   // Open JioSaavn for a track
   const openJioSaavn = (trackUrl: string) => {
-    // Make sure the URL is properly formed
-    const formattedUrl = trackUrl.startsWith('http') ? trackUrl : `https://www.jiosaavn.com/song/${trackUrl}`;
-    window.open(formattedUrl, '_blank', 'noopener,noreferrer');
-    // Log for debugging
-    console.log('Opening JioSaavn URL:', formattedUrl);
+    try {
+      // Make sure the URL is properly formed
+      let formattedUrl = trackUrl;
+      
+      // Check if it's a full URL or just a song ID
+      if (!trackUrl.startsWith('http')) {
+        formattedUrl = `https://www.jiosaavn.com/song/${trackUrl}`;
+      }
+      
+      // Special handling for JioSaavn links
+      // Extract the song ID if it's a full URL to ensure we're using the proper format
+      if (formattedUrl.includes('jiosaavn.com/song/')) {
+        const url = new URL(formattedUrl);
+        const pathParts = url.pathname.split('/').filter(Boolean);
+        
+        // JioSaavn URLs typically have the format /song/{song-name}/{song-id}
+        if (pathParts.length >= 2) {
+          const songId = pathParts[pathParts.length - 1];
+          // Use the mobile-friendly format which is more reliable
+          formattedUrl = `https://www.jiosaavn.com/song/_/${songId}`;
+        }
+      }
+      
+      // Open in a new tab
+      window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+      console.log('Opening JioSaavn URL:', formattedUrl);
+    } catch (error) {
+      console.error('Error opening JioSaavn link:', error);
+      // Fallback to the original URL if something goes wrong
+      window.open(trackUrl, '_blank', 'noopener,noreferrer');
+    }
   };
   
   // Render nothing if no weather data
