@@ -1,7 +1,17 @@
-import { FC, useState } from "react";
-import { Search, Bell } from "lucide-react";
+import { FC, useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { Search, Bell, LogOut, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/lib/protected-route";
 
 interface HeaderProps {
   onSearch: (location: string) => void;
@@ -9,12 +19,26 @@ interface HeaderProps {
 
 const Header: FC<HeaderProps> = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { user, logout } = useAuth();
+  const [, setLocation] = useLocation();
+  const [username, setUsername] = useState<string>("User");
+
+  useEffect(() => {
+    if (user && user.username) {
+      setUsername(user.username);
+    }
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       onSearch(searchQuery);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setLocation("/auth");
   };
 
   return (
@@ -38,15 +62,29 @@ const Header: FC<HeaderProps> = ({ onSearch }) => {
           <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
         </button>
         
-        <div className="relative">
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="https://ui-avatars.com/api/?name=User&background=random" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <span className="hidden md:inline text-sm font-medium text-gray-700">User</span>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="focus:outline-none">
+            <div className="flex items-center space-x-2 cursor-pointer">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={`https://ui-avatars.com/api/?name=${username}&background=random`} />
+                <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="hidden md:inline text-sm font-medium text-gray-700">{username}</span>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer" onClick={() => setLocation("/settings")}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

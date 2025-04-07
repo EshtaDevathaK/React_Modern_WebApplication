@@ -1,133 +1,333 @@
-import { FC } from "react";
-import { Music, Play, ExternalLink } from "lucide-react";
+import { FC, useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Music, ExternalLink, Play, ListMusic } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface MusicVibesProps {
   weather: any;
 }
 
-interface PlaylistTrack {
+export interface PlaylistTrack {
   title: string;
   artist: string;
   duration: string;
+  spotifyUrl: string;
 }
 
+// Define playlists based on weather conditions
+const WEATHER_PLAYLISTS: Record<string, {
+  title: string;
+  mood: string;
+  spotifyId: string;
+  description: string;
+  tracks: PlaylistTrack[];
+}> = {
+  'sunny': {
+    title: 'Sunny Day Vibes',
+    mood: 'Upbeat & Energetic',
+    spotifyId: '37i9dQZF1DX6ALfRKlHn1t',
+    description: 'Bright, cheerful tunes perfect for a sunny day outside.',
+    tracks: [
+      { title: 'Walking On Sunshine', artist: 'Katrina & The Waves', duration: '3:58', spotifyUrl: 'https://open.spotify.com/track/05wIrZSwuaVWhcv5FfqeH0' },
+      { title: 'Good Vibrations', artist: 'The Beach Boys', duration: '3:39', spotifyUrl: 'https://open.spotify.com/track/7tf64mcmU9B7HN9n8SH4IC' },
+      { title: 'Island In The Sun', artist: 'Weezer', duration: '3:20', spotifyUrl: 'https://open.spotify.com/track/2MLHyLy5z5l5YRp7momlgw' },
+      { title: 'Here Comes The Sun', artist: 'The Beatles', duration: '3:05', spotifyUrl: 'https://open.spotify.com/track/6dGnYIeXmHdcikdzNNDMm2' },
+      { title: 'Good Day Sunshine', artist: 'The Beatles', duration: '2:10', spotifyUrl: 'https://open.spotify.com/track/754kgU5rWscRTfvlsuEwFp' }
+    ]
+  },
+  'rain': {
+    title: 'Rainy Day Playlist',
+    mood: 'Mellow & Reflective',
+    spotifyId: '37i9dQZF1DXbvABJXBIyiY',
+    description: 'Calm, introspective songs that pair perfectly with raindrops.',
+    tracks: [
+      { title: 'Riders on the Storm', artist: 'The Doors', duration: '7:14', spotifyUrl: 'https://open.spotify.com/track/14XWXWv5FoCbFzLksawpEe' },
+      { title: 'Set Fire to the Rain', artist: 'Adele', duration: '4:01', spotifyUrl: 'https://open.spotify.com/track/73nJjNtdZDU0tMKXcSqaQD' },
+      { title: 'Rain', artist: 'The Beatles', duration: '3:02', spotifyUrl: 'https://open.spotify.com/track/42cv3XIW0q4cjFHI65S29g' },
+      { title: 'November Rain', artist: 'Guns N\' Roses', duration: '8:57', spotifyUrl: 'https://open.spotify.com/track/0jeq4JJ2cPHvCie3lax4gV' },
+      { title: 'Purple Rain', artist: 'Prince', duration: '8:41', spotifyUrl: 'https://open.spotify.com/track/54X78diSLoUDI3joC2bjMz' }
+    ]
+  },
+  'cloudy': {
+    title: 'Cloudy Day Chill',
+    mood: 'Thoughtful & Calm',
+    spotifyId: '37i9dQZF1DX6GwdWRQMQpq',
+    description: 'Laid-back tunes for those overcast, contemplative days.',
+    tracks: [
+      { title: 'Both Sides Now', artist: 'Joni Mitchell', duration: '4:33', spotifyUrl: 'https://open.spotify.com/track/2jvuMDqBK04WvCYYz5qjvG' },
+      { title: 'Cloudbusting', artist: 'Kate Bush', duration: '5:10', spotifyUrl: 'https://open.spotify.com/track/7nvaKuQv0Kh3QkrCYZocCM' },
+      { title: 'Dreams', artist: 'Fleetwood Mac', duration: '4:14', spotifyUrl: 'https://open.spotify.com/track/0ofHAoxe9vBkTCp2UQIavz' },
+      { title: 'The Clouds', artist: 'The Paper Kites', duration: '3:44', spotifyUrl: 'https://open.spotify.com/track/3PVygWh2PtcLxKkQZpBOxO' },
+      { title: 'Head in the Clouds', artist: 'Jamiroquai', duration: '3:57', spotifyUrl: 'https://open.spotify.com/track/3SJBMFPkFHPnVZYEVnhqmn' }
+    ]
+  },
+  'snow': {
+    title: 'Winter Wonderland',
+    mood: 'Cozy & Peaceful',
+    spotifyId: '37i9dQZF1DX4H7FFUM2osB',
+    description: 'Cozy tracks to enjoy while watching the snowfall outside.',
+    tracks: [
+      { title: 'Let It Snow! Let It Snow! Let It Snow!', artist: 'Dean Martin', duration: '1:57', spotifyUrl: 'https://open.spotify.com/track/2uFaJJtFnADsWAHFXVrd5t' },
+      { title: 'Winter', artist: 'Antonio Vivaldi', duration: '8:37', spotifyUrl: 'https://open.spotify.com/track/0WBLQ650dbrk3Vti9UAHZ8' },
+      { title: 'Snowflake', artist: 'Kate Bush', duration: '3:31', spotifyUrl: 'https://open.spotify.com/track/6H6x9Gqs7vc8eZrTRuAgd7' },
+      { title: 'Cold', artist: 'Chris Stapleton', duration: '4:27', spotifyUrl: 'https://open.spotify.com/track/3QmolSZqjjLksTUvZJ6pPS' },
+      { title: 'Winterbreak', artist: 'MUNA', duration: '3:42', spotifyUrl: 'https://open.spotify.com/track/37R0bQOQj5a7DOqh1TGnQK' }
+    ]
+  },
+  'clear': {
+    title: 'Clear Skies Beats',
+    mood: 'Fresh & Uplifting',
+    spotifyId: '37i9dQZF1DX1BzILRveYHb',
+    description: 'Fresh, uplifting tracks for days with crystal clear skies.',
+    tracks: [
+      { title: 'Blue Skies', artist: 'Ella Fitzgerald', duration: '3:40', spotifyUrl: 'https://open.spotify.com/track/7dBKLM26S0oeECb0mzXPQt' },
+      { title: 'Mr. Blue Sky', artist: 'Electric Light Orchestra', duration: '5:04', spotifyUrl: 'https://open.spotify.com/track/2RlgNHKcydI9sayD2Df2xp' },
+      { title: 'Blue Clear Sky', artist: 'George Strait', duration: '2:54', spotifyUrl: 'https://open.spotify.com/track/3R2bC0VF0ZwgKbdQRFVDjT' },
+      { title: 'Sky Blue', artist: 'Peter Gabriel', duration: '6:37', spotifyUrl: 'https://open.spotify.com/track/7ewTC4WPCVJNDVXYnzPP2Z' },
+      { title: 'Clear Blue Water', artist: 'Good People', duration: '3:54', spotifyUrl: 'https://open.spotify.com/track/7IYCWMqfn9bXV0iAyLYctg' }
+    ]
+  },
+  'thunderstorm': {
+    title: 'Thunderstorm Intensity',
+    mood: 'Dramatic & Powerful',
+    spotifyId: '37i9dQZF1DX2pSTOxoPbx9',
+    description: 'Powerful tracks that match the intensity of a thunderstorm.',
+    tracks: [
+      { title: 'Thunderstruck', artist: 'AC/DC', duration: '4:52', spotifyUrl: 'https://open.spotify.com/track/57bgtoPSgt236HzfBOd8kj' },
+      { title: 'Riders on the Storm', artist: 'The Doors', duration: '7:14', spotifyUrl: 'https://open.spotify.com/track/14XWXWv5FoCbFzLksawpEe' },
+      { title: 'Thunder', artist: 'Imagine Dragons', duration: '3:07', spotifyUrl: 'https://open.spotify.com/track/57FiWCjpu47STk8QLixV3g' },
+      { title: 'Thunderclouds', artist: 'LSD, Sia, Diplo, Labrinth', duration: '3:59', spotifyUrl: 'https://open.spotify.com/track/6v4XVlLAQZ1efYb1mCJPHF' },
+      { title: 'The Thunder Rolls', artist: 'Garth Brooks', duration: '3:42', spotifyUrl: 'https://open.spotify.com/track/5xSoGGIYmeMw0mzOTnHil2' }
+    ]
+  },
+  'fog': {
+    title: 'Misty Morning Tunes',
+    mood: 'Mysterious & Ethereal',
+    spotifyId: '37i9dQZF1DX5VfG3CPQd8n',
+    description: 'Atmospheric music that enhances the mystical quality of fog.',
+    tracks: [
+      { title: 'The Foggy Dew', artist: 'Sinéad O\'Connor & The Chieftains', duration: '5:21', spotifyUrl: 'https://open.spotify.com/track/4q7z0Vw9bvG8yTOVR1PoNe' },
+      { title: 'Fog', artist: 'Radiohead', duration: '2:18', spotifyUrl: 'https://open.spotify.com/track/2mNT0e6F8skKRvtJs6A3kp' },
+      { title: 'A Foggy Day', artist: 'Frank Sinatra', duration: '2:37', spotifyUrl: 'https://open.spotify.com/track/6J8gFveYoYJVfAwmQJGBwT' },
+      { title: 'Pyramid Song', artist: 'Radiohead', duration: '5:01', spotifyUrl: 'https://open.spotify.com/track/51oxGKLZDucWz8y12UNvzz' },
+      { title: 'In The Mist', artist: 'Bill Evans', duration: '4:34', spotifyUrl: 'https://open.spotify.com/track/78NjhDEXoXamVrknJcdWsz' }
+    ]
+  },
+  'mist': {
+    title: 'Misty Morning Tunes',
+    mood: 'Mysterious & Ethereal',
+    spotifyId: '37i9dQZF1DX5VfG3CPQd8n',
+    description: 'Atmospheric music that enhances the mystical quality of fog.',
+    tracks: [
+      { title: 'The Foggy Dew', artist: 'Sinéad O\'Connor & The Chieftains', duration: '5:21', spotifyUrl: 'https://open.spotify.com/track/4q7z0Vw9bvG8yTOVR1PoNe' },
+      { title: 'Fog', artist: 'Radiohead', duration: '2:18', spotifyUrl: 'https://open.spotify.com/track/2mNT0e6F8skKRvtJs6A3kp' },
+      { title: 'A Foggy Day', artist: 'Frank Sinatra', duration: '2:37', spotifyUrl: 'https://open.spotify.com/track/6J8gFveYoYJVfAwmQJGBwT' },
+      { title: 'Pyramid Song', artist: 'Radiohead', duration: '5:01', spotifyUrl: 'https://open.spotify.com/track/51oxGKLZDucWz8y12UNvzz' },
+      { title: 'In The Mist', artist: 'Bill Evans', duration: '4:34', spotifyUrl: 'https://open.spotify.com/track/78NjhDEXoXamVrknJcdWsz' }
+    ]
+  },
+  'hot': {
+    title: 'Summer Heat Playlist',
+    mood: 'Energetic & Vibrant',
+    spotifyId: '37i9dQZF1DX0AMssoUKNXN',
+    description: 'High-energy tracks to keep your spirits up on a hot day.',
+    tracks: [
+      { title: 'Hot Stuff', artist: 'Donna Summer', duration: '3:49', spotifyUrl: 'https://open.spotify.com/track/5mqdXKBZGpMxgdsGGYKLRk' },
+      { title: 'Cruel Summer', artist: 'Bananarama', duration: '3:35', spotifyUrl: 'https://open.spotify.com/track/2cvOfKHOHgwQlLiuLKP2xR' },
+      { title: 'Summer of \'69', artist: 'Bryan Adams', duration: '3:36', spotifyUrl: 'https://open.spotify.com/track/0GONea6G2XdnHWjNZd6zt3' },
+      { title: 'Heat Wave', artist: 'Martha & The Vandellas', duration: '2:47', spotifyUrl: 'https://open.spotify.com/track/3pABGbdCF2dJXbRX4BypKt' },
+      { title: 'California Girls', artist: 'The Beach Boys', duration: '2:46', spotifyUrl: 'https://open.spotify.com/track/38tIXzrb6G2tXcVPQTMXRy' }
+    ]
+  },
+  'cold': {
+    title: 'Cold Day Warmth',
+    mood: 'Comforting & Warm',
+    spotifyId: '37i9dQZF1DWX4jbIx6RmR0',
+    description: 'Soothing, warming tracks to help you through a cold day.',
+    tracks: [
+      { title: 'Cold Little Heart', artist: 'Michael Kiwanuka', duration: '9:58', spotifyUrl: 'https://open.spotify.com/track/51pQ7vY7WXzxskwloaeqyj' },
+      { title: 'Winter', artist: 'Tori Amos', duration: '5:43', spotifyUrl: 'https://open.spotify.com/track/5Vj5IWGm63j1DcVP0jE5CH' },
+      { title: 'Song for a Winter\'s Night', artist: 'Gordon Lightfoot', duration: '3:02', spotifyUrl: 'https://open.spotify.com/track/50RGkfupmdScuaYFXrUcEP' },
+      { title: 'Cold', artist: 'Stormzy', duration: '3:10', spotifyUrl: 'https://open.spotify.com/track/1xkC6iU5kgEwN2wf5ATV82' },
+      { title: 'A Case of You', artist: 'Joni Mitchell', duration: '4:22', spotifyUrl: 'https://open.spotify.com/track/6JOyAzTdcJz9G8jvAk9tQU' }
+    ]
+  },
+  'windy': {
+    title: 'Windswept Melodies',
+    mood: 'Free & Flowing',
+    spotifyId: '37i9dQZF1DXa2PvUpywmrr',
+    description: 'Songs that capture the feeling of the wind in your hair.',
+    tracks: [
+      { title: 'Blowin\' in the Wind', artist: 'Bob Dylan', duration: '2:48', spotifyUrl: 'https://open.spotify.com/track/18GiV1BaXzPVYpp9rmOg0E' },
+      { title: 'The Wind', artist: 'Cat Stevens', duration: '1:42', spotifyUrl: 'https://open.spotify.com/track/4fDfkT7qe3bfNDzgAFFgEr' },
+      { title: 'Winds of Change', artist: 'Scorpions', duration: '5:10', spotifyUrl: 'https://open.spotify.com/track/3ovjw5HZZv43SxTwApooCM' },
+      { title: 'Wild Is The Wind', artist: 'David Bowie', duration: '6:01', spotifyUrl: 'https://open.spotify.com/track/1wcQ8eBfKTdLrRzBKQJQJu' },
+      { title: 'Summer Wind', artist: 'Frank Sinatra', duration: '2:53', spotifyUrl: 'https://open.spotify.com/track/4wwePFYgQswjNdKEuWJUOI' }
+    ]
+  },
+  'default': {
+    title: 'Weather Mood Mix',
+    mood: 'Balanced & Pleasant',
+    spotifyId: '37i9dQZF1DXaXB8fQg7xif',
+    description: 'A well-balanced mix for any weather condition.',
+    tracks: [
+      { title: 'Everybody Talks About the Weather', artist: 'Keb\' Mo\'', duration: '3:35', spotifyUrl: 'https://open.spotify.com/track/6sMxTsvVZc2KFzMuXiHdF6' },
+      { title: 'Here Comes the Sun', artist: 'The Beatles', duration: '3:05', spotifyUrl: 'https://open.spotify.com/track/6dGnYIeXmHdcikdzNNDMm2' },
+      { title: 'Riders on the Storm', artist: 'The Doors', duration: '7:14', spotifyUrl: 'https://open.spotify.com/track/14XWXWv5FoCbFzLksawpEe' },
+      { title: 'Sunny', artist: 'Bobby Hebb', duration: '2:43', spotifyUrl: 'https://open.spotify.com/track/2Hf7NVGq4MKK8Jxl5Lxnp2' },
+      { title: 'Umbrella', artist: 'Rihanna, JAY-Z', duration: '4:36', spotifyUrl: 'https://open.spotify.com/track/49FYlytm3dAAraYgpoJZux' }
+    ]
+  }
+};
+
+// Weather mood popup text
+const MOOD_POPUP = {
+  "Sunny": "Bring your cool shades 😎 — it's a sunglasses kinda day!",
+  "Rain": "Sweater weather 🧣 — and maybe a warm cup of chai?",
+  "Thunderstorm": "Stay in, curl up with a book 📚 — it's stormy out there.",
+  "Clear": "Perfect time for a walk 🌿 — don't forget your playlist!",
+  "Clouds": "Grey skies, golden vibes ✨ — make your own sunshine!",
+  "Snow": "Snowy vibes ❄️ — gloves on, heart warm.",
+};
+
 const MusicVibes: FC<MusicVibesProps> = ({ weather }) => {
-  const condition = weather.current.condition.text.toLowerCase();
+  const [selectedTrack, setSelectedTrack] = useState<number | null>(null);
+  const [playlist, setPlaylist] = useState<typeof WEATHER_PLAYLISTS['default']>(WEATHER_PLAYLISTS['default']);
+  const [moodText, setMoodText] = useState<string>('');
   
-  // Generate playlist based on weather condition
-  const getPlaylist = () => {
-    if (condition.includes("rain") || condition.includes("drizzle") || condition.includes("shower")) {
-      return {
-        name: "Rainy Day Playlist",
-        description: "Cozy beats for rainy weather",
-        coverImage: "https://images.unsplash.com/photo-1501999635878-71cb5379c2d8?w=300&auto=format&fit=crop&q=80",
-        tracks: [
-          { title: "Rain Sounds", artist: "Nature Recordings", duration: "3:45" },
-          { title: "Rainy Jazz", artist: "Café Lounge", duration: "4:30" },
-          { title: "Storm Watching", artist: "Ambient Moods", duration: "5:15" },
-          { title: "Cozy Evenings", artist: "Piano Collection", duration: "3:20" }
-        ]
-      };
-    } else if (condition.includes("cloud") || condition.includes("overcast")) {
-      return {
-        name: "Partly Cloudy Playlist",
-        description: "Mellow tunes for your laid-back day",
-        coverImage: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=300&auto=format&fit=crop&q=80",
-        tracks: [
-          { title: "Autumn Leaves", artist: "Jazz Collection", duration: "3:42" },
-          { title: "Coffee & Rain", artist: "Lo-Fi Beats", duration: "4:15" },
-          { title: "Gentle Breeze", artist: "Acoustic Playlist", duration: "3:28" },
-          { title: "Golden Hour", artist: "Indie Favorites", duration: "3:55" }
-        ]
-      };
-    } else if (condition.includes("sunny") || condition.includes("clear")) {
-      return {
-        name: "Sunny Day Vibes",
-        description: "Upbeat tunes for a perfect day",
-        coverImage: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&auto=format&fit=crop&q=80",
-        tracks: [
-          { title: "Summer Breeze", artist: "Beach Party", duration: "3:15" },
-          { title: "Morning Light", artist: "Pop Essentials", duration: "2:55" },
-          { title: "Happy Days", artist: "Feel Good Hits", duration: "3:40" },
-          { title: "Sunshine Rhythm", artist: "Dance Collection", duration: "4:10" }
-        ]
-      };
-    } else if (condition.includes("snow") || condition.includes("blizzard")) {
-      return {
-        name: "Winter Wonderland",
-        description: "Peaceful melodies for snow days",
-        coverImage: "https://images.unsplash.com/photo-1482597869166-609e91429f40?w=300&auto=format&fit=crop&q=80",
-        tracks: [
-          { title: "Snowfall", artist: "Piano Dreams", duration: "4:30" },
-          { title: "Winter Magic", artist: "Classical Collection", duration: "3:55" },
-          { title: "Fireplace Melodies", artist: "Acoustic Guitars", duration: "5:20" },
-          { title: "Cozy Night In", artist: "Holiday Favorites", duration: "3:45" }
-        ]
-      };
-    } else {
-      return {
-        name: "Weather Moods",
-        description: "Eclectic mix for changing weather",
-        coverImage: "https://images.unsplash.com/photo-1470115636492-6d2b56f9146d?w=300&auto=format&fit=crop&q=80",
-        tracks: [
-          { title: "Changing Skies", artist: "Ambient Collection", duration: "4:25" },
-          { title: "Wind & Waves", artist: "Nature Sounds", duration: "3:40" },
-          { title: "Seasonal Shifts", artist: "Meditation Music", duration: "5:10" },
-          { title: "Weather Patterns", artist: "Electronic Ambient", duration: "3:35" }
-        ]
-      };
+  useEffect(() => {
+    if (weather) {
+      const condition = weather.current.condition.text.toLowerCase();
+      let playlistKey: string = 'default';
+      let moodKey: string = 'Clear';
+      
+      // Determine which playlist to use
+      if (condition.includes('sun') || condition.includes('clear')) {
+        playlistKey = 'sunny';
+        moodKey = 'Sunny';
+      } else if (condition.includes('rain') || condition.includes('drizzle')) {
+        playlistKey = 'rain';
+        moodKey = 'Rain';
+      } else if (condition.includes('cloud')) {
+        playlistKey = 'cloudy';
+        moodKey = 'Clouds';
+      } else if (condition.includes('snow')) {
+        playlistKey = 'snow';
+        moodKey = 'Snow';
+      } else if (condition.includes('thunder') || condition.includes('storm')) {
+        playlistKey = 'thunderstorm';
+        moodKey = 'Thunderstorm';
+      } else if (condition.includes('fog') || condition.includes('mist')) {
+        playlistKey = 'fog';
+        moodKey = 'Clear';
+      } else if (weather.current.temp_c > 28) {
+        playlistKey = 'hot';
+        moodKey = 'Sunny';
+      } else if (weather.current.temp_c < 5) {
+        playlistKey = 'cold';
+        moodKey = 'Snow';
+      } else if (weather.current.wind_kph > 30) {
+        playlistKey = 'windy';
+        moodKey = 'Clear';
+      }
+      
+      setPlaylist(WEATHER_PLAYLISTS[playlistKey] || WEATHER_PLAYLISTS['default']);
+      setMoodText(MOOD_POPUP[moodKey as keyof typeof MOOD_POPUP] || '');
     }
+  }, [weather]);
+
+  const openSpotify = (trackUrl: string) => {
+    window.open(trackUrl, '_blank');
   };
-  
-  const playlist = getPlaylist();
-  
+
+  const openPlaylist = () => {
+    window.open(`https://open.spotify.com/playlist/${playlist.spotifyId}`, '_blank');
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-soft p-4 md:p-6">
-      <h2 className="font-heading text-xl font-semibold text-navy mb-4 flex items-center">
-        <Music className="h-5 w-5 text-primary-light mr-2" />
-        <span>Music Vibes</span>
-      </h2>
+    <Card className="w-full overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg flex items-center">
+            <Music className="mr-2 h-5 w-5 text-primary" />
+            Weather-Based Music
+          </CardTitle>
+          <Badge variant="secondary" className="font-normal">
+            {playlist.mood}
+          </Badge>
+        </div>
+      </CardHeader>
       
-      <div className="rounded-lg bg-navy p-4 flex items-center mb-4">
-        <div className="h-16 w-16 rounded-md overflow-hidden mr-4">
-          <img src={playlist.coverImage} alt="Playlist Cover" className="h-full w-full object-cover" />
-        </div>
-        
-        <div className="flex-grow">
-          <h3 className="text-white font-medium mb-1">{playlist.name}</h3>
-          <p className="text-gray-300 text-sm">{playlist.description}</p>
-        </div>
-        
-        <div>
-          <button className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors">
-            <Play className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-      
-      <div className="space-y-3">
-        {playlist.tracks.map((track, index) => (
-          <div key={index} className="flex items-center p-2 hover:bg-gray-50 rounded-lg transition-colors">
-            <div className="w-8 text-center text-gray-500">{index + 1}</div>
-            <div className="ml-2 flex-grow">
-              <div className="font-medium">{track.title}</div>
-              <div className="text-sm text-gray-500">{track.artist}</div>
+      <CardContent className="pt-4">
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold mb-1">{playlist.title}</h3>
+          <p className="text-gray-600 text-sm">{playlist.description}</p>
+          
+          {moodText && (
+            <div className="bg-muted/40 p-3 rounded-lg mt-3 text-sm italic">
+              {moodText}
             </div>
-            <div className="text-sm text-gray-500">{track.duration}</div>
-          </div>
-        ))}
-      </div>
-      
-      <div className="mt-4 text-center">
-        <a 
-          href="#" 
-          className="inline-flex items-center text-primary-dark hover:text-primary transition-colors text-sm font-medium"
-        >
-          <span>Open in Spotify</span>
-          <ExternalLink className="h-3 w-3 ml-1" />
-        </a>
-      </div>
-    </div>
+          )}
+        </div>
+        
+        <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+          {playlist.tracks.map((track, index) => (
+            <div 
+              key={index}
+              className={`p-2 rounded-lg flex justify-between items-center transition-colors cursor-pointer ${
+                selectedTrack === index ? 'bg-primary/10' : 'hover:bg-muted'
+              }`}
+              onClick={() => setSelectedTrack(index)}
+            >
+              <div className="flex items-center space-x-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  selectedTrack === index ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                }`}>
+                  {selectedTrack === index ? 
+                    <Play className="h-4 w-4" /> : 
+                    <span className="text-sm font-medium">{index + 1}</span>
+                  }
+                </div>
+                <div>
+                  <p className="font-medium line-clamp-1">{track.title}</p>
+                  <p className="text-xs text-muted-foreground">{track.artist}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className="text-xs text-muted-foreground">{track.duration}</span>
+                <Button 
+                  size="icon" 
+                  variant="outline" 
+                  className="h-7 w-7"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSpotify(track.spotifyUrl);
+                  }}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="mt-4 flex justify-between">
+          <p className="text-xs text-muted-foreground">
+            Songs selected based on current weather conditions
+          </p>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="gap-2" 
+            onClick={openPlaylist}
+          >
+            <ListMusic className="h-4 w-4" />
+            <span>Open in Spotify</span>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
