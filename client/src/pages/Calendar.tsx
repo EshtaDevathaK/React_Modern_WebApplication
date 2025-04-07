@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { fetchWeatherData } from "@/lib/weatherService";
+import { fetchWeatherData } from "@/lib/weatherService2";
 import { getWeatherIcon } from "@/lib/weatherIcons";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

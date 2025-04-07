@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import MultiDayForecast from "@/components/MultiDayForecast";
 import HourlyForecast from "@/components/HourlyForecast";
 import ChanceOfRain from "@/components/ChanceOfRain";
-import { fetchWeatherData } from "@/lib/weatherService";
+import { fetchWeatherData } from "@/lib/weatherService2";
 
 export default function Forecast() {
   const [searchLocation, setSearchLocation] = useState("Los Angeles");

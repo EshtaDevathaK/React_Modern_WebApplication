@@ -12,7 +12,7 @@ import MusicVibes from "@/components/MusicVibes";
 import LocalVibeCard from "@/components/LocalVibeCard";
 import MoodModal from "@/components/MoodModal";
 import MoodToast from "@/components/MoodToast";
-import { fetchWeatherData } from "@/lib/weatherService";
+import { fetchWeatherData } from "@/lib/weatherService2";
 import { getBackgroundColor } from "@/lib/weatherUtils";
 
 export default function Home() {

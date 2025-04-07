@@ -202,16 +202,13 @@ const getGeocode = async (city: string) => {
       longitude: data[0].lon,
       name: data[0].name,
       country: data[0].country,
-      state: data[0].state || "",
-      timezone: "auto" // OpenWeather API handles timezone conversion
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     };
   } catch (error) {
-    console.error('Geocoding error:', error);
+    console.error('Error getting geocode:', error);
     throw error;
   }
 };
-
-// We already have these helper functions defined above
 
 // Function to get user's current location using the browser's Geolocation API
 export const getCurrentLocation = (): Promise<{ lat: number, lon: number }> => {
