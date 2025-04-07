@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import { Info, Umbrella, Sun, Snowflake, Wind, Cloud, Moon } from "lucide-react";
+import { Info, Umbrella, Sun, Snowflake, Wind, Cloud, Moon, Flower, Leaf } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface OutfitOfTheDayProps {
@@ -15,6 +15,9 @@ interface OutfitRecommendation {
   seasonIcon: React.ReactNode;
   seasonName: string;
   colorScheme: string;
+  traditionalWear?: string;
+  seasonEmoji?: string;
+  festivalNote?: string;
 }
 
 const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
@@ -117,8 +120,11 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
         footwear: "Insulated winter boots",
         extras: "Consider layering for better temperature control",
         seasonIcon: <Snowflake className="h-5 w-5 text-blue-500" />,
-        seasonName: "Winter",
-        colorScheme: "bg-gradient-to-br from-blue-50 to-indigo-100 border-indigo-200"
+        seasonName: "Tamil Winter",
+        colorScheme: "bg-gradient-to-br from-blue-50 to-indigo-100 border-indigo-200",
+        traditionalWear: "Woolen angavastram for men, thick silk sarees with shawls for women",
+        seasonEmoji: "❄️",
+        festivalNote: "Traditional Pongal and Margazhi season attire for celebrations"
       };
     }
     
@@ -171,8 +177,11 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
         footwear: "Casual sneakers or loafers",
         extras: "Layer clothes for changing temperatures throughout the day",
         seasonIcon: <Sun className="h-5 w-5 text-emerald-500" />,
-        seasonName: "Spring",
-        colorScheme: "bg-gradient-to-br from-emerald-50 to-green-100 border-green-200"
+        seasonName: "Tamil Spring",
+        colorScheme: "bg-gradient-to-br from-emerald-50 to-green-100 border-green-200",
+        traditionalWear: "Light silk veshti for men, pastel cotton-silk mix sarees for women",
+        seasonEmoji: "🌿",
+        festivalNote: "Perfect for Tamil New Year (Puthandu) celebrations with vibrant traditional attire"
       };
     }
     
@@ -187,7 +196,10 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
           extras: "Small umbrella and waterproof phone case",
           seasonIcon: <Umbrella className="h-5 w-5 text-sky-500" />,
           seasonName: "Summer Rain",
-          colorScheme: "bg-gradient-to-br from-sky-50 to-cyan-100 border-cyan-200"
+          colorScheme: "bg-gradient-to-br from-sky-50 to-cyan-100 border-cyan-200",
+          traditionalWear: "Cotton saree or dhoti for comfort with rain protection",
+          seasonEmoji: "☔",
+          festivalNote: "Consider traditional Aadi month celebrations with comfortable clothing"
         };
       }
       
@@ -200,7 +212,10 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
           extras: "Portable fan, cooling towel, and extra water bottle",
           seasonIcon: <Sun className="h-5 w-5 text-orange-500" />,
           seasonName: "Hot & Humid Summer",
-          colorScheme: "bg-gradient-to-br from-orange-50 to-red-100 border-red-200"
+          colorScheme: "bg-gradient-to-br from-orange-50 to-red-100 border-red-200",
+          traditionalWear: "Light cotton veshti (dhoti) for men, cotton saree or pavadai for women",
+          seasonEmoji: "☀️",
+          festivalNote: "Perfect for Tamil summer festivals like Pongal with traditional attire"
         };
       }
       
@@ -213,7 +228,10 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
           extras: "Wide-brimmed hat, high-SPF sunscreen, and sunglasses",
           seasonIcon: <Sun className="h-5 w-5 text-orange-500" />,
           seasonName: "Hot Summer Day",
-          colorScheme: "bg-gradient-to-br from-orange-50 to-amber-100 border-amber-200"
+          colorScheme: "bg-gradient-to-br from-orange-50 to-amber-100 border-amber-200",
+          traditionalWear: "White cotton veshti and angavastram for men, cotton Chettinad saree for women",
+          seasonEmoji: "🔆",
+          festivalNote: "Consider light-colored traditional clothing for outdoor temple visits"
         };
       }
       
@@ -225,8 +243,11 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
         footwear: "Sandals, light sneakers, or breathable shoes",
         extras: "Sunglasses, hat, and sunscreen recommended",
         seasonIcon: <Sun className="h-5 w-5 text-amber-500" />,
-        seasonName: "Summer",
-        colorScheme: "bg-gradient-to-br from-amber-50 to-yellow-100 border-yellow-200"
+        seasonName: "Tamil Summer",
+        colorScheme: "bg-gradient-to-br from-amber-50 to-yellow-100 border-yellow-200",
+        traditionalWear: "Light cotton veshti (dhoti) for men, cotton sarees or salwar for women",
+        seasonEmoji: "☀️",
+        festivalNote: "Perfect for summer festivals with bright, airy traditional clothing"
       };
     }
     
@@ -279,8 +300,11 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
         footwear: "Casual closed shoes or lightweight boots",
         extras: "Layer clothes to adjust for temperature changes",
         seasonIcon: <Cloud className="h-5 w-5 text-orange-400" />,
-        seasonName: "Fall",
-        colorScheme: "bg-gradient-to-br from-orange-50 to-amber-100 border-amber-200"
+        seasonName: "Tamil Fall",
+        colorScheme: "bg-gradient-to-br from-orange-50 to-amber-100 border-amber-200",
+        traditionalWear: "Medium weight angavastram for men, silk-cotton blend sarees with light shawl for women",
+        seasonEmoji: "🍂",
+        festivalNote: "Ideal for Navarathri and other harvest festival celebrations"
       };
     }
     
@@ -293,8 +317,11 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
         footwear: "Closed shoes or boots",
         extras: "Consider a scarf or light gloves if it's breezy",
         seasonIcon: <Moon className="h-5 w-5 text-indigo-400" />,
-        seasonName: "Evening Outfit",
-        colorScheme: "bg-gradient-to-br from-indigo-50 to-purple-100 border-purple-200"
+        seasonName: "Tamil Evening",
+        colorScheme: "bg-gradient-to-br from-indigo-50 to-purple-100 border-purple-200",
+        traditionalWear: "Light shawl with traditional clothing for temple visits or evening events",
+        seasonEmoji: "🌙",
+        festivalNote: "Perfect for evening cultural programs and musical events"
       };
     }
     
@@ -306,8 +333,11 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
       footwear: "Comfortable shoes appropriate for the weather",
       extras: "Check forecast for changing conditions",
       seasonIcon: <Sun className="h-5 w-5 text-amber-400" />,
-      seasonName: "Everyday Outfit",
-      colorScheme: "bg-gradient-to-br from-blue-50 to-indigo-100 border-indigo-200"
+      seasonName: "Tamil Everyday",
+      colorScheme: "bg-gradient-to-br from-blue-50 to-indigo-100 border-indigo-200",
+      traditionalWear: "Casual cotton veshti or lungi for men, lightweight cotton churidar or cotton saree for women",
+      seasonEmoji: "✨",
+      festivalNote: "Suitable for daily activities and casual cultural events"
     };
   };
   
@@ -369,10 +399,23 @@ const OutfitOfTheDay: FC<OutfitOfTheDayProps> = ({ weather }) => {
             </div>
             
             <div className="text-sm text-gray-700 mt-auto">
-              <div className="flex items-center p-2 bg-white bg-opacity-50 rounded-lg">
+              <div className="flex items-center p-2 bg-white bg-opacity-50 rounded-lg mb-2">
                 <Info className="h-4 w-4 text-primary-dark mr-2 flex-shrink-0" />
                 <span>{seasonalOutfit.extras}</span>
               </div>
+              
+              {seasonalOutfit.traditionalWear && (
+                <div className="flex items-center p-2 bg-white bg-opacity-60 rounded-lg mt-2 border border-primary-light/20">
+                  <span className="text-xl mr-2 flex-shrink-0">{seasonalOutfit.seasonEmoji || "👘"}</span>
+                  <div>
+                    <p className="font-medium text-sm mb-1">Traditional Wear</p>
+                    <p className="text-xs">{seasonalOutfit.traditionalWear}</p>
+                    {seasonalOutfit.festivalNote && (
+                      <p className="text-xs text-primary-dark mt-1 italic">{seasonalOutfit.festivalNote}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

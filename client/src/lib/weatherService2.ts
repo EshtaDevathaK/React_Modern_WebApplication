@@ -2,7 +2,7 @@
 // Using environment variables for API key security
 
 // API Configuration
-const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || '33380abeed3051f5eef2276c1a2b6036'; // Fallback to hardcoded key if env variable is not available
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY; // Using environment variable for API key security
 const API_URL = 'https://api.openweathermap.org/data/2.5';
 const GEOCODING_API_URL = 'https://api.openweathermap.org/geo/1.0';
 
@@ -529,6 +529,12 @@ export const fetchWeatherData = async (cityOrCoords: string | { lat: number, lon
       },
       forecast: {
         forecastday: dailyForecasts
+      },
+      // Include raw data for compatibility with analytics components
+      raw: {
+        current: currentWeatherData,
+        forecast: forecastData,
+        list: forecastData.list || []
       }
     };
   } catch (error) {
