@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// This must be added at the top of the file (if not already there):
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.json());
@@ -54,6 +59,13 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+      // ✅ Serve static files from React's build output
+  app.use(express.static(path.join(__dirname, '../dist/public')));
+
+  // ✅ Catch-all route for React client-side routing
+  app.get('*', (_req, res) =>
+    res.sendFile(path.join(__dirname, '../dist/public/index.html'))
+  );
   }
 
   // ALWAYS serve the app on port 5000
