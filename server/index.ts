@@ -59,13 +59,14 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
-      // ✅ Serve static files from React's build output
-  app.use(express.static(path.join(__dirname, '../dist/public')));
-
-  // ✅ Catch-all route for React client-side routing
-  app.get('*', (_req, res) =>
-    res.sendFile(path.join(__dirname, '../dist/public/index.html'))
-  );
+    
+    // Serve static files from the build directory
+    app.use(express.static(path.join(__dirname, '../dist/public')));
+    
+    // Handle client-side routing by serving index.html for all routes
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../dist/public/index.html'));
+    });
   }
 
   // ALWAYS serve the app on port 5000
